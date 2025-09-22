@@ -1,0 +1,25 @@
+name: netauto
+topology:
+  nodes:
+    r1:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - ./configs/r1/frr.conf:/etc/frr/frr.conf
+        - ./configs/r1/daemons:/etc/frr/daemons
+    r2:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - ./configs/r2/frr.conf:/etc/frr/frr.conf
+        - ./configs/r2/daemons:/etc/frr/daemons
+    h1:
+      kind: linux
+      image: ghcr.io/hellt/network-multitool:latest
+    h2:
+      kind: linux
+      image: ghcr.io/hellt/network-multitool:latest
+  links:
+    - endpoints: ["r1:eth1","r2:eth1"]   # R1-R2
+    - endpoints: ["h1:eth1","r1:eth2"]   # H1-R1
+    - endpoints: ["h2:eth1","r2:eth2"]   # H2-R2
