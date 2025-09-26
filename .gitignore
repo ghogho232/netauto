@@ -6,3 +6,50 @@ __pycache__/
 lab/clab-netauto/.tls/
 python/out/
 lab/clab-netauto/
+=======
+# Python 관련
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+
+# 가상환경
+.venv/
+env/
+venv/
+
+# 테스트/리포트 산출물
+.python-version
+pytest.ini
+.pytest_cache/
+docs/report.md
+python/out/
+
+# Containerlab 생성 산출물
+lab/clab-netauto/
+*.log
+
+# Ansible 실행 산출물
+backups/
+*.retry
+
+# 보안 관련 (키/인증서)
+*.pem
+*.key
+*.crt
+*.csr
+*.pub
+authorized_keys
+
+# 에디터/IDE 설정
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 시스템/OS 잡파일
+.DS_Store
+Thumbs.db
+
