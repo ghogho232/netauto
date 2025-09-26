@@ -1,13 +1,4 @@
-__pycache__/
-*.pyc
-.venv/
-.env
-*.log
-lab/clab-netauto/.tls/
-python/out/
-lab/clab-netauto/
-=======
-# Python 관련
+# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -15,27 +6,27 @@ __pycache__/
 *.sqlite3
 *.db
 
-# 가상환경
+# Virtualenv
 .venv/
 env/
 venv/
 
-# 테스트/리포트 산출물
+# Test & reports
 .python-version
 pytest.ini
 .pytest_cache/
 docs/report.md
 python/out/
 
-# Containerlab 생성 산출물
+# Containerlab runtime
 lab/clab-netauto/
 *.log
 
-# Ansible 실행 산출물
+# Ansible outputs
 backups/
 *.retry
 
-# 보안 관련 (키/인증서)
+# Secrets (keys/certs)
 *.pem
 *.key
 *.crt
@@ -43,13 +34,13 @@ backups/
 *.pub
 authorized_keys
 
-# 에디터/IDE 설정
+# Editors / IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# 시스템/OS 잡파일
+# OS junk
 .DS_Store
 Thumbs.db
 
