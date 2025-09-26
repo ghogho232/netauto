@@ -5,3 +5,4 @@ __pycache__/
 *.log
 lab/clab-netauto/.tls/
 python/out/
+lab/clab-netauto/
