@@ -1,0 +1,16 @@
+- hosts: routers
+  gather_facts: false
+  tasks:
+    - name: Ensure backups dir exists (local)
+      delegate_to: localhost
+      run_once: true
+      file:
+        path: "{{ playbook_dir }}/../../backups"
+        state: directory
+
+    - name: Fetch running frr.conf
+      fetch:
+        src: /etc/frr/frr.conf
+        dest: "{{ playbook_dir }}/../../backups/{{ inventory_hostname }}.conf"
+        flat: true
+

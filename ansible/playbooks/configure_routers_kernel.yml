@@ -1,0 +1,19 @@
+- name: Configure kernel IPs and sysctl on routers (no python)
+  hosts: routers
+  gather_facts: no
+  tasks:
+    - name: Set IPs from vars
+      shell: |
+        {% if eth1_ip is defined %} ip addr replace {{ eth1_ip }} dev eth1; {% endif %}
+        {% if eth2_ip is defined %} ip addr replace {{ eth2_ip }} dev eth2; {% endif %}
+        sysctl -w net.ipv4.ip_forward=1
+    - command: ip -br a
+      register: ifs
+    - debug: var=ifs.stdout_lines
+
+- name: Apply FRR config (no restart)
+  hosts: routers
+  gather_facts: no
+  tasks:
+    - command: vtysh -b
+

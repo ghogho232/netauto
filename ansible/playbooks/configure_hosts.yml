@@ -1,0 +1,13 @@
+- name: Configure IP and default route on hosts
+  hosts: h1,h2
+  gather_facts: no
+  tasks:
+    - name: Flush any existing addresses on eth1 (no python/raw)
+      raw: ip addr flush dev eth1 || true
+
+    - name: Set IP on eth1 (no python/raw)
+      raw: ip addr replace {{ host_ip }} dev eth1
+
+    - name: Set default route via router (no python/raw)
+      raw: ip route replace default via {{ host_gw }}
+

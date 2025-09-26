@@ -1,0 +1,13 @@
+hostname {{ hostname | default(inventory_hostname) }}
+!
+interface {{ transit_if }}
+ ip ospf network point-to-point
+!
+router ospf
+{% set area = ospf_area | default(0) %}
+{% for net in ospf_networks %}
+ network {{ net }} area {{ area }}
+{% endfor %}
+!
+line vty
+

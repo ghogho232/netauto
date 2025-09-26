@@ -1,0 +1,111 @@
+- name: Inject failures (Break) and verify failures are detected
+  hosts: localhost
+  gather_facts: no
+  vars:
+    break_case: ""      # r1_eth2_ip | h1_default_route | ospf_adj_down
+  tasks:
+    - name: Validate break_case
+      assert:
+        that:
+          - break_case in ['r1_eth2_ip','h1_default_route','ospf_adj_down']
+        fail_msg: "break_case must be one of: r1_eth2_ip | h1_default_route | ospf_adj_down"
+
+# --- Break 단계 ---
+
+- name: Break - r1 LAN 인터페이스(IP 제거)
+  hosts: clab-netauto-r1
+  gather_facts: no
+  vars:
+    ifname: "{{ lan_if | default('eth2') }}"
+  tasks:
+    - name: Check LAN interface exists
+      command: ip link show {{ ifname }}
+      register: lancheck
+      ignore_errors: true
+      when: hostvars['localhost']['break_case'] == 'r1_eth2_ip'
+
+    - name: Fail if LAN interface missing
+      fail:
+        msg: "r1 has no {{ ifname }}. Fix containerlab links or host_vars."
+      when: hostvars['localhost']['break_case'] == 'r1_eth2_ip' and lancheck.rc != 0
+
+    - name: Flush IP on r1 LAN interface
+      shell: ip addr flush dev {{ ifname }}
+      when: hostvars['localhost']['break_case'] == 'r1_eth2_ip' and lancheck.rc == 0
+
+- name: Break - h1 기본 경로 삭제
+  hosts: clab-netauto-h1
+  gather_facts: no
+  tasks:
+    - name: Delete default route on h1 (ignore errors)
+      shell: ip route del default || true
+      when: hostvars['localhost']['break_case'] == 'h1_default_route'
+
+# OSPF adjacency 다운: r1에서 transit 네트워크의 network 문 제거
+- name: Break - OSPF adjacency down (remove network on r1)
+  hosts: clab-netauto-r1
+  gather_facts: no
+  vars:
+    transit_net_cidr: "{{ transit_net | default('10.0.12.0/30') }}"
+    ospf_area: "{{ hostvars[inventory_hostname].ospf_area | default(0) }}"
+  tasks:
+    - name: Remove OSPF network on r1
+      command: vtysh -c "conf t" -c "router ospf" -c "no network {{ transit_net_cidr }} area {{ ospf_area }}"
+      when: hostvars['localhost']['break_case'] == 'ospf_adj_down'
+
+# --- Verify (실패 감지) ---
+- import_playbook: verify.yml
+
+# --- Fix 단계 ---
+
+# r1_eth2_ip 복구: 커널 IP 재설정 + vtysh -b
+- name: Fix r1 eth2 ip -> set kernel IPs + vtysh -b
+  hosts: routers
+  gather_facts: no
+  tasks:
+    - name: Set kernel IPs (per router)
+      shell: |
+        if [ "{{ inventory_hostname }}" = "clab-netauto-r1" ]; then
+          ip addr replace 10.0.12.1/30 dev {{ transit_if | default('eth1') }}
+          ip addr replace 10.0.1.1/24  dev {{ lan_if     | default('eth2') }}
+        elif [ "{{ inventory_hostname }}" = "clab-netauto-r2" ]; then
+          ip addr replace 10.0.12.2/30 dev {{ transit_if | default('eth1') }}
+          ip addr replace 10.0.2.1/24  dev {{ lan_if     | default('eth2') }}
+        fi
+        sysctl -w net.ipv4.ip_forward=1
+      when: hostvars['localhost']['break_case'] == 'r1_eth2_ip'
+
+    - name: Apply FRR config
+      command: vtysh -b
+      when: hostvars['localhost']['break_case'] == 'r1_eth2_ip'
+
+# h1 기본 경로 복구
+- name: Fix h1 default route -> set host IP/GW
+  hosts: clab-netauto-h1
+  gather_facts: no
+  tasks:
+    - name: Reconfigure h1 IP/GW
+      shell: |
+        ip addr replace {{ host_ip }} dev eth1
+        ip route replace default via {{ host_gw }}
+      when: hostvars['localhost']['break_case'] == 'h1_default_route'
+
+# OSPF adjacency 복구: r1에서 network 다시 추가
+- name: Fix ospf adjacency -> re-add network on r1
+  hosts: clab-netauto-r1
+  gather_facts: no
+  vars:
+    transit_net_cidr: "{{ transit_net | default('10.0.12.0/30') }}"
+    ospf_area: "{{ hostvars[inventory_hostname].ospf_area | default(0) }}"
+  tasks:
+    - name: Re-add OSPF network on r1
+      command: vtysh -c "conf t" -c "router ospf" -c "network {{ transit_net_cidr }} area {{ ospf_area }}"
+      when: hostvars['localhost']['break_case'] == 'ospf_adj_down'
+
+    - name: Apply FRR config
+      command: vtysh -b
+      when: hostvars['localhost']['break_case'] == 'ospf_adj_down'
+
+# --- Verify (복구 확인) ---
+- import_playbook: verify.yml
+

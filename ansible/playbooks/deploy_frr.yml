@@ -1,0 +1,23 @@
+- name: Deploy FRR configs to routers
+  hosts: routers
+  gather_facts: no
+  tasks:
+    - name: Render frr.conf from template
+      template:
+        src: ../templates/frr.conf.j2
+        dest: /etc/frr/frr.conf
+        owner: frr
+        group: frr
+        mode: "0640"
+
+    - name: Ensure vtysh.conf exists (to silence warnings)
+      copy:
+        dest: /etc/frr/vtysh.conf
+        content: ""
+        owner: frr
+        group: frr
+        mode: "0640"
+
+    - name: Apply config without restart (vtysh -b)
+      command: vtysh -b
+

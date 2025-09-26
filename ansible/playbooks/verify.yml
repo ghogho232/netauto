@@ -1,0 +1,47 @@
+- name: Verify OSPF neighbors and routes
+  hosts: routers
+  gather_facts: no
+  vars:
+    expect_neighbors: 1
+  tasks:
+    - name: Show OSPF neighbors
+      command: vtysh -c "show ip ospf neighbor"
+      register: neigh
+      changed_when: false
+
+    - name: Count Full neighbors (as int)
+      set_fact:
+        full_count: "{{ (neigh.stdout | regex_findall('Full') | length) | int }}"
+
+    - name: Fail if neighbor Full count < expect
+      assert:
+        that:
+          - full_count | int >= expect_neighbors | int
+        fail_msg: |
+          OSPF neighbor check failed on {{ inventory_hostname }}.
+          Full count={{ full_count }} expect={{ expect_neighbors }}
+          Output:
+          {{ neigh.stdout }}
+
+    - name: Show OSPF routes
+      command: vtysh -c "show ip route ospf"
+      register: routes
+      changed_when: false
+
+    - name: Print routes (debug)
+      debug:
+        var: routes.stdout_lines
+
+- name: End-to-end ping from h1 to h2
+  hosts: clab-netauto-h1
+  gather_facts: no
+  tasks:
+    - name: Ping h2 address (raw, no python needed)
+      raw: ping -c 3 10.0.2.100
+      register: ping_out
+      changed_when: false
+
+    - name: Show ping result
+      debug:
+        var: ping_out.stdout_lines
+

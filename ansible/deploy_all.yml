@@ -1,0 +1,16 @@
+- name: Configure kernel IPs and sysctl on routers (no python)
+  hosts: routers
+  gather_facts: no
+  tasks:
+    - name: Set IPs (r1/r2 분기)
+      shell: |
+        if [ "{{ inventory_hostname }}" = "clab-netauto-r1" ]; then
+          ip addr replace 10.0.12.1/30 dev eth1
+          ip addr replace 10.0.1.1/24 dev eth2
+        else
+          ip addr replace 10.0.12.2/30 dev eth1
+          ip addr replace 10.0.2.1/24 dev eth2
+        fi
+    - name: Enable IPv4 forwarding
+      command: sysctl -w net.ipv4.ip_forward=1
+

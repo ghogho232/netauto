@@ -5,13 +5,11 @@ topology:
       kind: linux
       image: frrouting/frr:latest
       binds:
-        - ./configs/r1/frr.conf:/etc/frr/frr.conf
         - ./configs/r1/daemons:/etc/frr/daemons
     r2:
       kind: linux
       image: frrouting/frr:latest
       binds:
-        - ./configs/r2/frr.conf:/etc/frr/frr.conf
         - ./configs/r2/daemons:/etc/frr/daemons
     h1:
       kind: linux

@@ -31,7 +31,6 @@ host_key_checking = False              # 컨테이너/임시 호스트에서 접
 
 3-2. 인벤토리 & 변수
 ini
-코드 복사
 # ansible/inventory.ini
 [r1]
 clab-netauto-r1 ansible_connection=docker ansible_python_interpreter=/usr/bin/python3
@@ -58,14 +57,12 @@ ansible_python_interpreter: 라우터 컨테이너(FRR)는 Python이 있으므�
 (단, 호스트 h1/h2는 Python 설치가 불안정 → raw 모듈로만 사용)
 
 yaml
-코드 복사
 # ansible/group_vars/routers.yml
 ospf_area: 0
 transit_net: 10.0.12.0/30
 모든 라우터에 공통 적용되는 변수(예: OSPF area, 전송망 대역).
 
 yaml
-코드 복사
 # ansible/host_vars/clab-netauto-r1.yml
 hostname: r1
 lan_if: eth2
@@ -77,7 +74,6 @@ ospf_networks:
   - "{{ lan_net }}"
   - "{{ transit_net }}"
 yaml
-코드 복사
 # ansible/host_vars/clab-netauto-r2.yml
 hostname: r2
 lan_if: eth2
@@ -93,7 +89,6 @@ ospf_networks:
 템플릿에서 이 선언형 변수를 읽어 frr.conf 생성.
 
 yaml
-코드 복사
 # ansible/host_vars/clab-netauto-h1.yml
 host_ip: 10.0.1.100/24
 host_gw: 10.0.1.1
@@ -105,7 +100,6 @@ host_gw: 10.0.2.1
 
 3-3. 메인 파이프라인 (원클릭)
 yaml
-코드 복사
 # ansible/deploy_all.yml
 - name: Configure kernel IPs and sysctl on routers (no python)
   hosts: routers
@@ -134,7 +128,6 @@ yaml
 
 3-4. FRR(OSPF) 배포 (템플릿)
 yaml
-코드 복사
 # ansible/playbooks/deploy_frr.yml
 - name: Deploy FRR configs to routers
   hosts: routers
@@ -164,7 +157,6 @@ vtysh -b: FRR 데몬 재시작 없이 런타임 반영(안정).
 (컨테이너에서 restart는 종종 rc=137 같은 충돌을 유발)
 
 jinja2
-코드 복사
 # ansible/templates/frr.conf.j2
 hostname {{ hostname | default(inventory_hostname) }}
 !
@@ -181,7 +173,6 @@ ospf_networks 반복으로 광고할 네트워크를 선언형으로 관리.
 
 3-5. 호스트 IP/GW 구성 (Python 없이 raw)
 yaml
-코드 복사
 # ansible/playbooks/configure_hosts.yml
 - name: Configure IP and default route on hosts
   hosts: h1,h2
@@ -205,7 +196,6 @@ Alpine 미러 불안정으로 apk add python3 실패해도 문제 없이 동작.
 
 3-6. 검증(Assert 기반)
 yaml
-코드 복사
 # ansible/playbooks/verify.yml
 - name: Verify OSPF neighbors and routes
   hosts: routers
@@ -259,7 +249,6 @@ yaml
 
 3-7. Containerlab 토폴로지(참고)
 yaml
-코드 복사
 # lab/netauto.clab.yml
 name: netauto
 topology:
@@ -319,7 +308,6 @@ FRR 재시작(rc=137)
 
 6) 실행 런북
 bash
-코드 복사
 # 1) 토폴로지 초기화/재배포
 cd ~/netauto/lab
 sudo containerlab destroy -t netauto.clab.yml -c

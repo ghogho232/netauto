@@ -1,0 +1,24 @@
+- name: Configure kernel IPs and sysctl on routers (no python)
+  hosts: routers
+  gather_facts: no
+  tasks:
+    - name: Set IPs (r1/r2 분기)
+      shell: |
+        if [ "{{ inventory_hostname }}" = "clab-netauto-r1" ]; then
+          ip addr replace 10.0.12.1/30 dev eth1
+          ip addr replace 10.0.1.1/24  dev eth2
+        else
+          ip addr replace 10.0.12.2/30 dev eth1
+          ip addr replace 10.0.2.1/24  dev eth2
+        fi
+        sysctl -w net.ipv4.ip_forward=1
+    - command: ip -br a
+      register: ifs
+    - debug: var=ifs.stdout_lines
+
+- import_playbook: playbooks/deploy_frr.yml     # vtysh.conf 생성 + frr.conf 템>플릿 + vtysh -b
+
+- import_playbook: playbooks/configure_hosts.yml # raw로 eth1 IP/GW 설정 (python 없이 동작)
+
+- import_playbook: playbooks/verify.yml          # 이웃/OSPF 경로/엔드투엔드 ping
+

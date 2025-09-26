@@ -1,0 +1,9 @@
+hostname: r1
+lan_if: eth2
+transit_if: eth1
+lan_net: 10.0.1.0/24
+transit_net: 10.0.12.0/30
+ospf_area: 0
+ospf_networks:
+  - 10.0.1.0/24
+  - 10.0.12.0/30
