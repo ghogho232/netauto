@@ -63,3 +63,12 @@ smoke:
 routing:
 	NETAUTO_PREFIX=$(PFX) $(PYTEST) -q -m routing
 
+# --- CI/CD ---
+ci:
+	. .venv/bin/activate && pytest -q --junitxml=tests/artifacts/junit.xml || true && \
+	python python/collect_routes.py || true && python python/report.py || true
+
+ci-light:
+	CI_LIGHT=1 NETAUTO_PREFIX=clab-netauto . .venv/bin/activate && pytest -q --junitxml=tests/artifacts/junit.xml || true && \
+	python python/collect_routes.py || true && python python/report.py || true
+

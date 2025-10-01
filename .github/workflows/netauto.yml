@@ -1,0 +1,51 @@
+name: netauto
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  light:
+    name: CI Light (no lab)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Run drift + unit-safe tests (light mode)
+        env:
+          CI_LIGHT: "1"
+          NETAUTO_PREFIX: "clab-netauto"
+        run: |
+          . .venv/bin/activate
+          # 실패해도 리포트 생성까지 가기 위해 종료코드는 저장만 하고 나중에 반영
+          set +e
+          pytest -q --junitxml=tests/artifacts/junit.xml
+          TEST_RC=$?
+          # 상태 수집/리포트는 lab이 없으면 빈 결과일 수 있으므로 예외 허용
+          python python/collect_routes.py || true
+          python python/report.py || true
+          exit $TEST_RC
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netauto-artifacts-light
+          path: |
+            tests/artifacts/**
+            docs/report.md
+            python/out/**
+
