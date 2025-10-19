@@ -24,6 +24,29 @@ jobs:
           pip install -U pip
           pip install -r requirements.txt
 
+      # 추가 1: junit 결과 폴더 생성
+      - name: Prepare junit output dir
+        run: mkdir -p tests/artifacts
+
+      # 추가 2: validate.py 실행 (드리프트 검사)
+      - name: Run drift check (validate.py)
+        env:
+          CI_LIGHT: "1"
+          NETAUTO_PREFIX: "clab-netauto"
+        id: drift
+        run: |
+          . .venv/bin/activate
+          set +e
+          python python/validate.py
+          CODE=$?
+          echo "exit_code=$CODE" >> $GITHUB_OUTPUT
+          exit 0
+
+      # 추가 3: DRIFT_STATUS 환경변수 전달
+      - name: Export DRIFT_STATUS for report
+        run: echo "DRIFT_STATUS=${{ steps.drift.outputs.exit_code }}" >> $GITHUB_ENV
+
+      # 기존 테스트 + 리포트 생성 단계
       - name: Run drift + unit-safe tests (light mode)
         env:
           CI_LIGHT: "1"
