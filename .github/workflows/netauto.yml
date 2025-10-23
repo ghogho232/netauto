@@ -72,3 +72,46 @@ jobs:
             docs/report.md
             python/out/**
 
+  publish:
+    name: Publish Health Report to GitHub Pages
+    runs-on: ubuntu-22.04
+    needs: light
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    steps:
+      # 1) light 잡에서 업로드한 아티팩트 다운로드
+      - name: Download artifacts from light job
+        uses: actions/download-artifact@v4
+        with:
+          name: netauto-artifacts-light
+          path: site
+
+      # 2) index 페이지 만들어 report로 링크
+      - name: Create index.md
+        run: |
+          mkdir -p site
+          cat > site/index.md <<'EOF'
+          ---
+          title: Netauto Health
+          ---
+          # Netauto Health
+
+          Open **[Latest Report](./docs/report.md)**
+
+          *(Auto-published by GitHub Actions)*
+          EOF
+
+      # 3) Pages 설정 및 업로드/배포
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to Pages
+        uses: actions/deploy-pages@v4
+
