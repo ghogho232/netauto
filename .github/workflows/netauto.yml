@@ -81,29 +81,40 @@ jobs:
       id-token: write
       contents: read
     steps:
-      # 1) light 잡에서 업로드한 아티팩트 다운로드
+      # light 잡에서 업로드한 아티팩트 다운로드
       - name: Download artifacts from light job
         uses: actions/download-artifact@v4
         with:
           name: netauto-artifacts-light
           path: site
 
-      # 2) index 페이지 만들어 report로 링크
-      - name: Create index.md
+      # 디버그: 실제 내려온 파일 구조 확인
+      - name: List downloaded files
         run: |
-          mkdir -p site
-          cat > site/index.md <<'EOF'
-          ---
-          title: Netauto Health
-          ---
-          # Netauto Health
+          echo "[tree of site/]"
+          find site -maxdepth 5 -type f -print | sort
 
-          Open **[Latest Report](./docs/report.md)**
+      # report 존재 보증(없으면 실패로 알림)
+      - name: Assert report exists
+        run: |
+          if [ ! -f "site/docs/report.md" ]; then
+            echo "::error ::Missing site/docs/report.md in artifact"
+            exit 1
+          fi
 
-          *(Auto-published by GitHub Actions)*
-          EOF
+      # 루트 인덱스 생성(리포트로 바로 가는 링크 제공)
+      - name: Create index.html
+        run: |
+          cat > site/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>Netauto Health</title>
+          <h1>Netauto Health</h1>
+          <p>Open <a href="./docs/report.md">Latest Report</a></p>
+          <p><em>Auto-published by GitHub Actions</em></p>
+          HTML
 
-      # 3) Pages 설정 및 업로드/배포
+      # Pages 설정 및 업로드/배포
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
@@ -114,4 +125,10 @@ jobs:
 
       - name: Deploy to Pages
         uses: actions/deploy-pages@v4
+
+      # 최종 URL을 로그로 출력해 바로 클릭할 수 있게
+      - name: Print Pages URL
+        run: |
+          echo "Pages URL:"
+          echo "https://${GITHUB_REPOSITORY_OWNER}.github.io/${{ github.event.repository.name }}/"
 
