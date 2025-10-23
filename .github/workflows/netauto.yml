@@ -191,7 +191,9 @@ jobs:
           STATUS_COLOR="good"
           [ "${DRIFT_STATUS}" != "0" ] && STATUS_COLOR="#E01E5A"
           PAGES_URL="https://${OWNER}.github.io/${REPO}/docs/report.md"
-          read -r -d '' PAYLOAD <<JSON
+
+          # payload.json 파일로 생성 (변수 확장 사용)
+          cat > payload.json <<JSON
           {
             "text": "Netauto CI Result",
             "attachments": [
@@ -208,5 +210,50 @@ jobs:
             ]
           }
           JSON
-          curl -s -X POST -H 'Content-type: application/json' --data "${PAYLOAD}" "$SLACK_WEBHOOK_URL"
+
+          echo "Debug: sending payload below"
+          cat payload.json
+
+          # -f: HTTP 400 이상이면 실패 처리, -sS: 조용히+에러 시 상세 출력
+          curl -f -sS -X POST -H 'Content-type: application/json' \
+            --data @payload.json "$SLACK_WEBHOOK_URL"
+
+
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
 
