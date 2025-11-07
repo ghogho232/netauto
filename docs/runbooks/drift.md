@@ -15,8 +15,8 @@
 | 항목 | 명령어 |
 |------|--------|
 | 드리프트 메트릭 | `curl -s http://localhost:8000/metrics | grep netauto_drift` |
-| 라우터 실제 설정 백업 확인 | `cat backups/r1/frr.conf` |
-| Ansible 템플릿과 비교 | `ansible/roles/frr/templates/frr.conf.j2` |
+| 라우터 실제 설정 백업 확인 | `cat backups/clab-netauto-r1.conf` |
+| Ansible 템플릿과 비교 | `ansible/templates/frr.conf.j2` |
 
 ---
 
