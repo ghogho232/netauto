@@ -32,6 +32,7 @@ backups/
 *.crt
 *.csr
 *.pub
+*.env
 authorized_keys
 
 # Editors / IDE
@@ -44,3 +45,4 @@ authorized_keys
 .DS_Store
 Thumbs.db
 
+.env
