@@ -1,6 +1,7 @@
 - name: Deploy FRR configs to routers
   hosts: routers
-  gather_facts: no
+  gather_facts: false
+  become: true
   tasks:
     - name: Render frr.conf from template
       template:
@@ -9,6 +10,7 @@
         owner: frr
         group: frr
         mode: "0640"
+      register: frr_tmpl
 
     - name: Ensure vtysh.conf exists (to silence warnings)
       copy:
@@ -18,6 +20,14 @@
         group: frr
         mode: "0640"
 
-    - name: Apply config without restart (vtysh -b)
+    - name: Apply config (vtysh -b) only when changed
       command: vtysh -b
+      when: frr_tmpl.changed
+      register: vtysh_apply
+      changed_when: frr_tmpl.changed
+
+    - name: Show vtysh output (debug)
+      debug:
+        var: vtysh_apply.stdout_lines
+      when: frr_tmpl.changed
 

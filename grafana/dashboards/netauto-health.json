@@ -1,0 +1,311 @@
+{
+  "id": null,
+  "uid": "prometheus",
+  "title": "Netauto — Health & Observability",
+  "tags": ["netauto"],
+  "timezone": "",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "row",
+      "title": "Health Summary",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "type": "stat",
+      "title": "Overall Status",
+      "id": 1,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "0": { "text": "degraded" }, "1": { "text": "ok" } } }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": { "mode": "absolute", "steps": [ { "color": "red" }, { "color": "green", "value": 1 } ] }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [ { "expr": "netauto_status", "refId": "A" } ],
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 }
+    },
+    {
+      "type": "stat",
+      "title": "Config Drift",
+      "id": 2,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [ { "type": "value", "options": { "0": { "text": "clean" }, "1": { "text": "drift" } } } ]
+              },
+              {
+                "id": "thresholds",
+                "value": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "red", "value": 1 } ] }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [ { "expr": "netauto_drift_config", "refId": "A" } ],
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 1 }
+    },
+    {
+      "type": "stat",
+      "title": "Neighbors Full Ratio",
+      "id": 3,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "decimals": 2 },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red" }, { "color": "yellow", "value": 0.99 }, { "color": "green", "value": 1 } ] } }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "clamp_max(clamp_min(sum(netauto_neighbors{state=\"full\"}) / clamp_min(sum(netauto_neighbors{state=\"total\"}),1), 0), 1)",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 1 }
+    },
+    {
+      "type": "stat",
+      "title": "Routes (Total)",
+      "id": 4,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "value" },
+      "targets": [ { "expr": "netauto_routes_total", "refId": "A" } ],
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 1 }
+    },
+    {
+      "type": "row",
+      "title": "Time Series",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Overall Status (timeline)",
+      "id": 5,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "none", "min": 0, "max": 1 } },
+      "targets": [ { "expr": "netauto_status", "refId": "A" } ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Neighbors: Full vs Total",
+      "id": 6,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "netauto_neighbors{state=\"full\"}", "refId": "A", "legendFormat": "full" },
+        { "expr": "netauto_neighbors{state=\"total\"}", "refId": "B", "legendFormat": "total" }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Routes Total (trend)",
+      "id": 7,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "netauto_routes_total", "refId": "A" } ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Tests: Passed / Failed / Total",
+      "id": 8,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "netauto_tests_count{type=\"passed\"}", "refId": "A", "legendFormat": "passed" },
+        { "expr": "netauto_tests_count{type=\"failed\"}", "refId": "B", "legendFormat": "failed" },
+        { "expr": "netauto_tests_count{type=\"total\"}", "refId": "C", "legendFormat": "total" }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }
+    },
+    {
+      "type": "row",
+      "title": "Quality Ratios",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 }
+    },
+    {
+      "type": "gauge",
+      "title": "Tests Pass Ratio",
+      "id": 9,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 0.95 },
+              { "color": "green", "value": 0.99 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "clamp_max(clamp_min(netauto_tests_count{type=\"passed\"} / ignoring(type) clamp_min(netauto_tests_count{type=\"total\"}, 1), 0), 1)",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 25 }
+    },
+    {
+      "type": "gauge",
+      "title": "Neighbors Full Ratio (5m avg)",
+      "id": 10,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "yellow", "value": 0.99 },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "avg_over_time(clamp_max(clamp_min(sum(netauto_neighbors{state=\"full\"}) / clamp_min(sum(netauto_neighbors{state=\"total\"}),1), 0), 1)[5m:])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 25 }
+    },
+    {
+      "type": "stat",
+      "title": "Firing Alerts",
+      "id": 11,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        { "expr": "sum(ALERTS{alertstate=\"firing\"})", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "red", "value": 1 } ] } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 33 }
+    },
+    {
+      "type": "table",
+      "title": "Firing Alerts (live)",
+      "id": 12,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "showHeader": true },
+      "targets": [
+        { "expr": "ALERTS{alertstate=\"firing\"}", "refId": "A", "instant": true }
+      ],
+      "transformations": [
+        { "id": "labelsToFields" },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": true,
+            "renameByName": { "Value": "value" },
+            "excludeByName": { "__name__": true },
+            "order": ["alertname","severity","instance","job","topo","env","value","runbook_url"]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [ { "type": "value", "options": { "critical": { "text": "critical" }, "warning": { "text": "warning" } } } ]
+              },
+              {
+                "id": "thresholds",
+                "value": { "mode": "absolute", "steps": [ { "color": "yellow" }, { "color": "red", "value": 0 } ] }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "runbook_url" },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  { "title": "Open Runbook", "url": "${__value.text}", "targetBlank": true }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "value" },
+            "properties": [ { "id": "unit", "value": "none" }, { "id": "decimals", "value": 0 } ]
+          }
+        ]
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 39 }
+    }
+  ],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": { "refresh_intervals": ["5s","10s","30s","1m","5m"] }
+}
+

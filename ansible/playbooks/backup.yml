@@ -1,16 +1,28 @@
 - hosts: routers
   gather_facts: false
+  become: true
+  vars:
+    backups_root: "{{ playbook_dir }}/../../backups"
+    ts: "{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
   tasks:
     - name: Ensure backups dir exists (local)
       delegate_to: localhost
       run_once: true
       file:
-        path: "{{ playbook_dir }}/../../backups"
+        path: "{{ backups_root }}"
         state: directory
 
-    - name: Fetch running frr.conf
+    - name: Fetch running frr.conf (versioned copy)
       fetch:
         src: /etc/frr/frr.conf
-        dest: "{{ playbook_dir }}/../../backups/{{ inventory_hostname }}.conf"
+        dest: "{{ backups_root }}/{{ inventory_hostname }}.conf.{{ ts }}"
         flat: true
+
+    - name: Update latest pointer (copy latest to canonical filename)
+      delegate_to: localhost
+      run_once: false
+      copy:
+        src: "{{ backups_root }}/{{ inventory_hostname }}.conf.{{ ts }}"
+        dest: "{{ backups_root }}/{{ inventory_hostname }}.conf"
+        remote_src: false
 

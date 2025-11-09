@@ -1,0 +1,393 @@
+{
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Netauto — Health & Observability 
+  // 목적:
+  //   - Netauto 파이프라인(테스트/OSPF/라우트/알람)의 핵심 지표를 한 눈에 파악
+  //   - 운영 상태(OK/Degraded), 드리프트, 이웃 상태, 라우트 수, 테스트 합격률,
+  //     Alertmanager Firing 알람을 실시간으로 가시화
+  // 주의:
+  //   - 이 파일은 주석이 포함되어 있으므로 Grafana에 임포트용으로 쓰지 말 것
+  //   - 실제 배포는 같은 내용의 주석 없는 JSON을 사용
+  // 데이터소스 의존성:
+  //   - 모든 패널은 Prometheus 데이터소스(uid: "prometheus")를 사용
+  //   - datasource.yml에서 동일 uid를 선언해야 대시보드가 정상 작동함
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  "id": null,                          // 서버가 대시보드를 저장하며 자동 부여. 배포 시 null 유지 권장
+  "uid": "prometheus",                 // 대시보드 고유 식별자(링크 고정). URL 및 API 참조에 사용
+  "title": "Netauto — Health & Observability",  // 대시보드 제목
+  "tags": ["netauto"],                 // 태그(검색/정렬/관리용)
+  "timezone": "",                      // 빈 값 = 브라우저/Org 기본값 사용
+  "schemaVersion": 39,                 // Grafana JSON 스키마 버전
+  "version": 1,                        // 대시보드 리비전(저장 시 자동 증가; Git 관리 시 수동 유지 가능)
+  "refresh": "10s",                    // 자동 새로고침 주기(운영 상황 모니터링을 위해 10초)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 패널 모음 (위에서 아래로, 좌에서 우로 그리드 배치)
+  // gridPos: { h: 높이(행), w: 너비(열), x: 좌측 오프셋, y: 상단 오프셋 }
+  //   - w는 보통 24가 전체 너비(12 또는 24 컬럼 레이아웃)
+  // ─────────────────────────────────────────────────────────────────────────────
+  "panels": [
+
+    // 섹션: Health Summary
+    {
+      "type": "row",
+      "title": "Health Summary",       // 상단 섹션 헤더(그룹 구분용)
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+
+    // 1) Overall Status — netauto_status (0=degraded, 1=ok)
+    {
+      "type": "stat",
+      "title": "Overall Status",
+      "id": 1,                         // 패널 ID(대시보드 내 고유)
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },  // 최신 유효값만 단일값으로 표시
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value"                            // 값에 따라 색상 적용
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            // 단일 값 필드에 대한 매핑/임계값 정의
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              {
+                // 정수 상태값을 텍스트로 매핑
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "0": { "text": "degraded" }, "1": { "text": "ok" } } }
+                ]
+              },
+              {
+                // 1 미만은 빨강, 1 이상은 초록
+                "id": "thresholds",
+                "value": { "mode": "absolute", "steps": [ { "color": "red" }, { "color": "green", "value": 1 } ] }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [ { "expr": "netauto_status", "refId": "A" } ],  // FastAPI /metrics에서 노출되는 커스텀 메트릭
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 }
+    },
+
+    // 2) Config Drift — netauto_drift_config (0=clean, 1=drift)
+    {
+      "type": "stat",
+      "title": "Config Drift",
+      "id": 2,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [ { "type": "value", "options": { "0": { "text": "clean" }, "1": { "text": "drift" } } } ]
+              },
+              {
+                // clean은 초록, drift는 빨강
+                "id": "thresholds",
+                "value": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "red", "value": 1 } ] }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [ { "expr": "netauto_drift_config", "refId": "A" } ],
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 1 }
+    },
+
+    // 3) Neighbors Full Ratio — full/total 비율
+    {
+      "type": "stat",
+      "title": "Neighbors Full Ratio",
+      "id": 3,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        // 퍼센트 단위로 표시, 임계값은 1(=100%) 기준
+        "defaults": { "unit": "percentunit", "decimals": 2 },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red" },              // 0 ~ 0.99
+                    { "color": "yellow", "value": 0.99 },
+                    { "color": "green", "value": 1 } // 1.00
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          // 0~1 범위에 고정(guard); 합계가 0인 경우 분모 clamp로 1 최소보장
+          "expr": "clamp_max(clamp_min(sum(netauto_neighbors{state=\"full\"}) / clamp_min(sum(netauto_neighbors{state=\"total\"}),1), 0), 1)",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 1 }
+    },
+
+    // 4) Routes (Total) — netauto_routes_total
+    {
+      "type": "stat",
+      "title": "Routes (Total)",
+      "id": 4,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "value" },
+      "targets": [ { "expr": "netauto_routes_total", "refId": "A" } ],
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 1 }
+    },
+
+    // 섹션: Time Series (시간 추이 패널 그룹)
+    {
+      "type": "row",
+      "title": "Time Series",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 }
+    },
+
+    // 5) Overall Status (timeline)
+    {
+      "type": "timeseries",
+      "title": "Overall Status (timeline)",
+      "id": 5,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "none", "min": 0, "max": 1 } },  // 0/1 상태 라인
+      "targets": [ { "expr": "netauto_status", "refId": "A" } ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+    },
+
+    // 6) Neighbors: Full vs Total (시계열 2 라인 비교)
+    {
+      "type": "timeseries",
+      "title": "Neighbors: Full vs Total",
+      "id": 6,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "netauto_neighbors{state=\"full\"}",  "refId": "A", "legendFormat": "full" },
+        { "expr": "netauto_neighbors{state=\"total\"}", "refId": "B", "legendFormat": "total" }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+    },
+
+    // 7) Routes Total (trend)
+    {
+      "type": "timeseries",
+      "title": "Routes Total (trend)",
+      "id": 7,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "netauto_routes_total", "refId": "A" } ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }
+    },
+
+    // 8) Tests: Passed / Failed / Total
+    {
+      "type": "timeseries",
+      "title": "Tests: Passed / Failed / Total",
+      "id": 8,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "netauto_tests_count{type=\"passed\"}", "refId": "A", "legendFormat": "passed" },
+        { "expr": "netauto_tests_count{type=\"failed\"}", "refId": "B", "legendFormat": "failed" },
+        { "expr": "netauto_tests_count{type=\"total\"}",  "refId": "C", "legendFormat": "total" }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }
+    },
+
+    // 섹션: Quality Ratios (품질 비율)
+    {
+      "type": "row",
+      "title": "Quality Ratios",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 }
+    },
+
+    // 9) Tests Pass Ratio — passed/total (0~1 게이지)
+    {
+      "type": "gauge",
+      "title": "Tests Pass Ratio",
+      "id": 9,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",    "value": 0    },  // 낮은 합격률 경고
+              { "color": "yellow", "value": 0.95 },  // 95% 미만 주의
+              { "color": "green",  "value": 0.99 }   // 99% 이상 양호
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          // total이 0일 때 분모를 최소 1로 보장하고 결과를 0~1로 clamp
+          "expr": "clamp_max(clamp_min(netauto_tests_count{type=\"passed\"} / ignoring(type) clamp_min(netauto_tests_count{type=\"total\"}, 1), 0), 1)",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 25 }
+    },
+
+    // 10) Neighbors Full Ratio (5m avg) — 단기 평균 안정성 지표
+    {
+      "type": "gauge",
+      "title": "Neighbors Full Ratio (5m avg)",
+      "id": 10,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",    "value": 0    },
+              { "color": "yellow", "value": 0.99 },
+              { "color": "green",  "value": 1    }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          // full/total 비율의 5분 평균(스파이크 평활)
+          "expr": "avg_over_time(clamp_max(clamp_min(sum(netauto_neighbors{state=\"full\"}) / clamp_min(sum(netauto_neighbors{state=\"total\"}),1), 0), 1)[5m:])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 25 }
+    },
+
+    // 11) Firing Alerts — 현재 firing 상태 알람 개수
+    {
+      "type": "stat",
+      "title": "Firing Alerts",
+      "id": 11,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        // Prometheus 내장 메트릭 ALERTS 사용. alertstate="firing" 필터
+        { "expr": "sum(ALERTS{alertstate=\"firing\"})", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              {
+                // 0이면 초록(정상), 1개 이상이면 빨강(문제 발생)
+                "id": "thresholds",
+                "value": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "red", "value": 1 } ] }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 33 }
+    },
+
+    // 12) Firing Alerts (live table) — firing 알람 상세(라벨 컬럼화 + runbook 링크)
+    {
+      "type": "table",
+      "title": "Firing Alerts (live)",
+      "id": 12,
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "showHeader": true },
+      "targets": [
+        { "expr": "ALERTS{alertstate=\"firing\"}", "refId": "A", "instant": true }
+      ],
+      "transformations": [
+        { "id": "labelsToFields" },          // 시계열 라벨들을 테이블 컬럼으로 변환
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": true,
+            "renameByName": { "Value": "value" },    // 값 컬럼명 정리
+            "excludeByName": { "__name__": true },   // 불필요한 컬럼 숨김
+            "order": ["alertname","severity","instance","job","topo","env","value","runbook_url"]  // 컬럼 순서
+          }
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            // severity 컬럼: 값 매핑 및 임계값 색상
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [ { "type": "value", "options": { "critical": { "text": "critical" }, "warning": { "text": "warning" } } } ]
+              },
+              {
+                "id": "thresholds",
+                "value": { "mode": "absolute", "steps": [ { "color": "yellow" }, { "color": "red", "value": 0 } ] }
+              }
+            ]
+          },
+          {
+            // runbook_url 컬럼: 클릭 가능한 링크로 렌더
+            "matcher": { "id": "byName", "options": "runbook_url" },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  { "title": "Open Runbook", "url": "${__value.text}", "targetBlank": true }
+                ]
+              }
+            ]
+          },
+          {
+            // value(메트릭 값) 표현 형식
+            "matcher": { "id": "byName", "options": "value" },
+            "properties": [ { "id": "unit", "value": "none" }, { "id": "decimals", "value": 0 } ]
+          }
+        ]
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 39 }
+    }
+  ],
+
+  // 변수 템플릿(현재 없음). 필요 시 datasource나 topology, env 등을 변수화 가능
+  "templating": { "list": [] },
+
+  // 기본 시간 범위(최근 1시간)
+  "time": { "from": "now-1h", "to": "now" },
+
+  // 타임피커 자동 새로고침 옵션
+  "timepicker": { "refresh_intervals": ["5s","10s","30s","1m","5m"] }
+}
+

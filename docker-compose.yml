@@ -1,0 +1,48 @@
+services:
+  netauto-api:
+    image: python:3.12
+    working_dir: /app
+    volumes: [ ".:/app" ]
+    environment: [ "PYTHONPATH=/app" ]
+    command: bash -lc "pip install fastapi uvicorn && uvicorn python.api.metrics:app --host 0.0.0.0 --port 8000"
+    ports: ["8000:8000"]
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prom/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prom/alert_rules.yml:/etc/prometheus/alert_rules.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-lifecycle  
+    ports: ["9090:9090"]
+    depends_on: [netauto-api, alertmanager]
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes:
+      - ./prom/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    secrets:
+      - slack_webhook_url
+    ports: ["9093:9093"]
+
+  grafana:
+    image: grafana/grafana
+    ports: ["3000:3000"]
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    depends_on: [prometheus]
+
+secrets:
+  slack_webhook_url:
+    file: ./secrets/slack_webhook_url

@@ -11,7 +11,7 @@ route:
 receivers:
   - name: slack
     slack_configs:
-      - api_url: ${SLACK_WEBHOOK_URL}
+      - api_url_file: /run/secrets/slack_webhook_url
         channel: "#netauto-ci"
         username: "alertmanager"
         send_resolved: true

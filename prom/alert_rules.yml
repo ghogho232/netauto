@@ -1,0 +1,40 @@
+groups:
+- name: netauto-recording
+  rules:
+  - record: netauto_neighbors_ratio
+    expr: clamp_max(clamp_min(sum(netauto_neighbors{state="full"}) / clamp_min(sum(netauto_neighbors{state="total"}), 1), 0), 1)
+  - record: netauto_tests_pass_ratio
+    expr: clamp_max(clamp_min(netauto_tests_count{type="passed"} / ignoring(type) clamp_min(netauto_tests_count{type="total"}, 1), 0), 1)
+
+- name: netauto-alerts
+  rules:
+  - alert: NetautoStatusDegraded
+    expr: netauto_status == 0
+    for: 1m
+    labels:
+      severity: critical
+      runbook_url: "https://github.com/ghogho232/netauto/blob/main/docs/runbooks/status.md"
+    annotations:
+      summary: "Overall status degraded"
+      description: "/health 판정이 degraded입니다."
+
+  - alert: NetautoDriftDetected
+    expr: netauto_drift_config > 0
+    for: 1m
+    labels:
+      severity: warning
+      runbook_url: "https://github.com/ghogho232/netauto/blob/main/docs/runbooks/drift.md"
+    annotations:
+      summary: "Config drift detected"
+      description: "validate.py가 드리프트를 감지했습니다."
+
+  - alert: NetautoTestsFailing
+    expr: netauto_tests_count{type="failed"} > 0
+    for: 1m
+    labels:
+      severity: critical
+      runbook_url: "https://github.com/ghogho232/netauto/blob/main/docs/runbooks/tests.md"
+    annotations:
+      summary: "Pytest failures"
+      description: "하나 이상의 테스트가 실패했습니다."
+
