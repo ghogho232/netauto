@@ -1,1 +1,32 @@
-{"status":"ok","neighbors":{"full":2,"total":2},"routes_total":6,"tests":{"tests":6,"passed":6,"failed":0,"skipped":0},"report_present":true,"nodes":{"clab-netauto-r1":{"routes":3,"full":1,"neigh_all":1},"clab-netauto-r2":{"routes":3,"full":1,"neigh_all":1}},"mtimes":{"routes_json":"2025-10-30T07:47:38.769813+00:00","junit_xml":"2025-10-30T07:47:41.955282+00:00","report_md":"2025-10-30T07:26:13.413026+00:00"}}
+{
+  "status": "ok",
+  "neighbors": {
+    "full": 2,
+    "total": 2
+  },
+  "routes_total": 6,
+  "tests": {
+    "tests": 6,
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0
+  },
+  "report_present": true,
+  "nodes": {
+    "clab-netauto-r1": {
+      "routes": 3,
+      "full": 1,
+      "neigh_all": 1
+    },
+    "clab-netauto-r2": {
+      "routes": 3,
+      "full": 1,
+      "neigh_all": 1
+    }
+  },
+  "mtimes": {
+    "routes_json": "2025-10-30T07:47:38.769813+00:00",
+    "junit_xml": "2025-10-30T07:47:41.955282+00:00",
+    "report_md": "2025-10-30T07:26:13.413026+00:00"
+  }
+}

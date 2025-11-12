@@ -1,0 +1,23 @@
+# HELP netauto_info Build info label carrier
+# TYPE netauto_info gauge
+netauto_info{commit="688e87af2e4f",topo="ospf-mini"} 1
+# HELP netauto_status Overall status (1=ok, 0=else)
+# TYPE netauto_status gauge
+netauto_status 1
+# HELP netauto_neighbors OSPF neighbors by state
+# TYPE netauto_neighbors gauge
+netauto_neighbors{state="full"} 2
+netauto_neighbors{state="total"} 2
+# HELP netauto_routes_total Total route count
+# TYPE netauto_routes_total gauge
+netauto_routes_total 6
+# HELP netauto_tests_count Pytest test counters
+# TYPE netauto_tests_count gauge
+netauto_tests_count{type="total"} 6
+netauto_tests_count{type="passed"} 6
+netauto_tests_count{type="failed"} 0
+netauto_tests_count{type="skipped"} 0
+# HELP netauto_drift_config Config drift (1=yes,0=no)
+# TYPE netauto_drift_config gauge
+netauto_drift_config 1
+# netauto_timestamp 1762583302

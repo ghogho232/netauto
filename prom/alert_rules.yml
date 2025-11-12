@@ -38,3 +38,14 @@ groups:
       summary: "Pytest failures"
       description: "하나 이상의 테스트가 실패했습니다."
 
+- name: netauto-health
+  rules:
+  - alert: NetautoDegraded
+    expr: netauto_status == 0
+    for: 2m
+    labels:
+      severity: warning
+      team: netops
+    annotations:
+      summary: "Netauto degraded"
+      description: "Netauto health status가 2분 이상 degraded 상태입니다."

@@ -3,9 +3,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-# ------------------------------------------------
 
-from fastapi import FastAPI, Response
+from fastapi import APIRouter, Response
 from datetime import datetime, timezone
 import argparse
 
@@ -16,7 +15,8 @@ from python.utils.parsers import (
     load_drift_status,
 )
 
-app = FastAPI(title="netauto-metrics")
+# FastAPI 인스턴스가 아니라 APIRouter를 노출해야 health.py가 include_router로 붙일 수 있음
+router = APIRouter()
 
 TOPOLOGY = "ospf-mini"  # 필요 시 환경변수로 치환
 
@@ -25,7 +25,6 @@ def _read_commit() -> str:
     if not head.exists():
         return "unknown"
     ref = head.read_text(errors="ignore").strip()
-    # HEAD가 직접 SHA이거나 refs 경로일 수 있음
     if ref.startswith("ref:"):
         ref_path = Path(".git") / ref.split(":", 1)[1].strip()
         return ref_path.read_text(errors="ignore").strip()[:12] if ref_path.exists() else "unknown"
@@ -42,12 +41,13 @@ def render_metrics() -> str:
     full = int(neighbors.get("full", 0))
     total = int(neighbors.get("total", 0))
 
-    routes_total = int(health.get("routes_total", 0)) or int(routes.get("routes_total", 0))    
+    routes_total = int(health.get("routes_total", 0)) or int(routes.get("routes_total", 0))
 
-    tests_total = int(health.get("tests", {}).get("tests", junit["tests"]))
-    failed = int(health.get("tests", {}).get("failed", junit["failures"]))
-    skipped = int(health.get("tests", {}).get("skipped", junit["skipped"]))
-    passed = int(health.get("tests", {}).get("passed", max(tests_total - failed, 0)))
+    # JUnit 우선, health.json은 fallback
+    tests_total = int(junit["tests"] if junit["tests"] is not None else health.get("tests", {}).get("tests", 0))
+    failed      = int(junit["failures"] if junit["failures"] is not None else health.get("tests", {}).get("failed", 0))
+    skipped     = int(junit["skipped"] if junit["skipped"] is not None else health.get("tests", {}).get("skipped", 0))
+    passed      = max(tests_total - failed, 0)
 
     commit = _read_commit()
 
@@ -86,13 +86,31 @@ def render_metrics() -> str:
     lines.append("# TYPE netauto_drift_config gauge")
     lines.append(f"netauto_drift_config {1 if drift else 0}")
 
-    # timestamp(레거시 주석 라인—Prometheus가 무시)
+    # ---- per-node metrics ----
+    nodes = health.get("nodes", {})
+    if isinstance(nodes, dict) and nodes:
+        lines.append("# HELP netauto_node_routes Routes per node")
+        lines.append("# TYPE netauto_node_routes gauge")
+        lines.append("# HELP netauto_node_neighbors Neighbors per node and state")
+        lines.append("# TYPE netauto_node_neighbors gauge")
+        for node, vals in nodes.items():
+            try:
+                n_routes = int(vals.get("routes", 0))
+                n_full = int(vals.get("full", 0))
+                n_total = int(vals.get("neigh_all", 0))
+            except Exception:
+                n_routes, n_full, n_total = 0, 0, 0
+            lines.append(f'netauto_node_routes{{node="{node}"}} {n_routes}')
+            lines.append(f'netauto_node_neighbors{{node="{node}",state="full"}} {n_full}')
+            lines.append(f'netauto_node_neighbors{{node="{node}",state="total"}} {n_total}')
+
+    # timestamp(주석 — Prometheus 무시)
     ts = int(datetime.now(timezone.utc).timestamp())
     lines.append(f"# netauto_timestamp {ts}")
 
     return "\n".join(lines) + "\n"
 
-@app.get("/metrics")
+@router.get("/metrics")
 def metrics():
     return Response(render_metrics(), media_type="text/plain; version=0.0.4; charset=utf-8")
 
@@ -108,3 +126,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

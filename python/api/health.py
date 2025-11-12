@@ -164,3 +164,6 @@ def health():
         "mtimes": mtimes
     }
 
+from .metrics import router as metrics_router
+app.include_router(metrics_router)
+

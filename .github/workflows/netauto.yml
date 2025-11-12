@@ -218,3 +218,16 @@ jobs:
           curl -f -sS -X POST -H 'Content-type: application/json' \
             --data @payload.json "$SLACK_WEBHOOK_URL"
 
+  lint:
+    name: Lint Prometheus rules
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install promtool
+        run: |
+          curl -L -o promtool.tgz https://github.com/prometheus/prometheus/releases/download/v2.54.1/prometheus-2.54.1.linux-amd64.tar.gz
+          tar xf promtool.tgz
+          sudo mv prometheus-*/promtool /usr/local/bin/promtool
+      - name: Validate alert rules
+        run: promtool check rules prom/alert_rules.yml
+
