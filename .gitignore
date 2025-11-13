@@ -1,48 +1,81 @@
+# -----------------------------
 # Python
+# -----------------------------
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.sqlite3
-*.db
 
-# Virtualenv
+# Python virtualenv
 .venv/
 env/
 venv/
 
-# Test & reports
+# Local Python settings
 .python-version
-pytest.ini
-.pytest_cache/
-docs/report.md
-python/out/
 
-# Containerlab runtime
+# -----------------------------
+# Test & Reports
+# -----------------------------
+.pytest_cache/
+python/out/
+docs/report.md
+DRIFT_STATUS
+
+# Auto-generated test artifacts
+python/routes.json
+
+# -----------------------------
+# Containerlab runtime files
+# -----------------------------
 lab/clab-netauto/
 *.log
 
+# -----------------------------
 # Ansible outputs
+# -----------------------------
 backups/
 *.retry
 
-# Secrets (keys/certs)
-*.pem
-*.key
-*.crt
-*.csr
-*.pub
-*.env
-authorized_keys
+# -----------------------------
+# TLS / Certificates / Secrets
+# 절대로 git에 올리면 안되는 민감 파일
+# -----------------------------
+secrets/
+.secrets/
+**/*.pem
+**/*.key
+**/*.crt
+**/*.csr
+**/*.srl
+**/*.p12
+**/*.der
 
+# Grafana / Prometheus / Alertmanager certs (runtime)
+grafana/data/
+prometheus/data/
+
+# -----------------------------
+# Grafana Dashboards (generated backups)
+# -----------------------------
+grafana/dashboards/*.bak
+
+# -----------------------------
+# Nginx (dynamic generated config)
+# -----------------------------
+nginx/*.conf
+
+# -----------------------------
 # Editors / IDE
+# -----------------------------
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS junk
+# -----------------------------
+# OS Junk files
+# -----------------------------
 .DS_Store
 Thumbs.db
 
-.env

@@ -1,0 +1,14 @@
+apiVersion: 1
+deleteContactPoints: []
+contactPoints:
+  - orgId: 1
+    name: alertmanager-default
+    receivers:
+      - uid: alertmanager-default
+        type: prometheus-alertmanager 
+        settings:
+          url: http://alertmanager:9093  # 도커 네트워크 서비스명 기준
+          # 필요시 인증이 있으면 다음 키 추가:
+          # basicAuthUser: ""
+          # basicAuthPassword: ""
+

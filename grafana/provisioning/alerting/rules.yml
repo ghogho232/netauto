@@ -1,0 +1,91 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: netauto-grafana
+    folder: "Netauto Alerts"
+    interval: 30s
+    rules:
+      # 1) Status Degraded
+      - uid: ga_status_degraded
+        title: NetautoStatusDegraded (Grafana)
+        condition: A
+        noDataState: NoData       # 데이터 없을 때 상태
+        execErrState: Error       # 쿼리 에러 시 상태
+        for: 1m                   # 1분 지속 시 발화
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: netauto_status == 0
+              instant: true
+              range: false
+              editorMode: code
+              interval: ""
+              legendFormat: ""
+            relativeTimeRange:     #  필수: 0s/0s 금지
+              from: 300            # 5m
+              to: 0
+        annotations:
+          runbook_url: https://github.com/ghogho232/netauto/blob/main/docs/runbooks/status.md
+        labels:
+          severity: critical
+          topo: ospf-mini
+          env: dev
+
+      # 2) Drift Detected
+      - uid: ga_drift_detected
+        title: NetautoDriftDetected (Grafana)
+        condition: A
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: netauto_drift_config > 0
+              instant: true
+              range: false
+              editorMode: code
+              interval: ""
+              legendFormat: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+        annotations:
+          runbook_url: https://github.com/ghogho232/netauto/blob/main/docs/runbooks/drift.md
+        labels:
+          severity: warning
+          topo: ospf-mini
+          env: dev
+
+      # 3) Tests Failing
+      - uid: ga_tests_failing
+        title: NetautoTestsFailing (Grafana)
+        condition: A
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: netauto_tests_count{type="failed"} > 0
+              instant: true
+              range: false
+              editorMode: code
+              interval: ""
+              legendFormat: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+        annotations:
+          runbook_url: https://github.com/ghogho232/netauto/blob/main/docs/runbooks/tests.md
+        labels:
+          severity: critical
+          topo: ospf-mini
+          env: dev
+

@@ -1,0 +1,39 @@
+name: validate-observability
+on:
+  push:
+    paths:
+      - "prom/**"
+      - "grafana/**"
+      - "python/api/**"
+      - "docs/**"
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y prometheus promtool jq
+
+      - name: Prometheus config check
+        run: promtool check config prom/prometheus.yml
+
+      - name: Prometheus rules check
+        run: promtool check rules prom/alert_rules.yml
+
+      - name: Grafana dashboard JSON lint
+        run: jq . grafana/dashboards/netauto-health.json >/dev/null
+
+      - name: Metrics contract check (static snapshot)
+        run: |
+          python3 python/api/metrics.py --snapshot
+          grep -q '^netauto_status ' docs/metrics.txt
+          grep -q '^netauto_drift_config ' docs/metrics.txt
+          grep -q 'netauto_neighbors{state="full"}' docs/metrics.txt
+          grep -q '^netauto_routes_total ' docs/metrics.txt
+          grep -q 'netauto_tests_count{type="failed"}' docs/metrics.txt
+
