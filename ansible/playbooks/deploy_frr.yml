@@ -1,7 +1,6 @@
 - name: Deploy FRR configs to routers
   hosts: routers
   gather_facts: false
-  become: true
   tasks:
     - name: Render frr.conf from template
       template:

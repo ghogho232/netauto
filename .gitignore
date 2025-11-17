@@ -34,8 +34,10 @@ lab/clab-netauto/
 # -----------------------------
 # Ansible outputs
 # -----------------------------
-backups/
 *.retry
+backups/*.runtime.conf   # 매번 덮어쓰는 러닝백업
+!backups/clab-netauto-r1.conf
+!backups/clab-netauto-r2.conf
 
 # -----------------------------
 # TLS / Certificates / Secrets
@@ -50,6 +52,7 @@ secrets/
 **/*.srl
 **/*.p12
 **/*.der
+.env
 
 # Grafana / Prometheus / Alertmanager certs (runtime)
 grafana/data/

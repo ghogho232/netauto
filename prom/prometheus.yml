@@ -17,7 +17,3 @@ scrape_configs:
         labels:
           env: "dev"
           topo: "ospf-mini"
-# trigger validate-observability
-# trigger validate-observability
-# trigger validate-observability
-# trigger validate-observability
