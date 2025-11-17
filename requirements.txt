@@ -5,4 +5,4 @@ pytest-xdist==3.6.1
 pytest-rerunfailures==14.0
 fastapi>=0.111
 uvicorn[standard]>=0.30
-
+fastapi

@@ -24,6 +24,8 @@ jobs:
           tar xf promtool.tgz
           sudo mv prometheus-*/promtool /usr/local/bin/promtool
           rm -rf prometheus-* promtool.tgz
+          python3 -m pip install --upgrade pip
+          python3 -m pip install fastapi
 
       - name: Prometheus config check
         run: promtool check config prom/prometheus.yml
