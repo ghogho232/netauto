@@ -17,7 +17,13 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y prometheus promtool jq
+          sudo apt-get install -y jq
+
+          # promtool 바이너리 직접 다운로드 (netauto.yml의 lint job과 동일한 방식)
+          curl -L -o promtool.tgz https://github.com/prometheus/prometheus/releases/download/v2.54.1/prometheus-2.54.1.linux-amd64.tar.gz
+          tar xf promtool.tgz
+          sudo mv prometheus-*/promtool /usr/local/bin/promtool
+          rm -rf prometheus-* promtool.tgz
 
       - name: Prometheus config check
         run: promtool check config prom/prometheus.yml
