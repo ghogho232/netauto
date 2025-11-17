@@ -17,15 +17,12 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq
+          # jq + prometheus (여기에 promtool 포함됨)
+          sudo apt-get install -y jq prometheus
 
-          # promtool 바이너리 직접 다운로드 (netauto.yml의 lint job과 동일한 방식)
-          curl -L -o promtool.tgz https://github.com/prometheus/prometheus/releases/download/v2.54.1/prometheus-2.54.1.linux-amd64.tar.gz
-          tar xf promtool.tgz
-          sudo mv prometheus-*/promtool /usr/local/bin/promtool
-          rm -rf prometheus-* promtool.tgz
+          # Python 패키지 설치 (requirements.txt 에 fastapi 포함했다고 가정)
           python3 -m pip install --upgrade pip
-          python3 -m pip install fastapi
+          python3 -m pip install -r requirements.txt
 
       - name: Prometheus config check
         run: promtool check config prom/prometheus.yml
