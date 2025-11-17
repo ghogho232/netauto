@@ -48,6 +48,7 @@ def test_r2_has_ospf_route_to_h1(containers):
     assert 'Known via "ospf"' in out, f"Not learned via OSPF on R2:\n{out}"
     assert re.search(r"^\s*\*\s*10\.0\.12\.1\b", out, re.M), f"Next-hop should be 10.0.12.1 on R2:\n{out}"
 
+@skip_if_light
 def test_no_drift_against_template(containers):
     from subprocess import run
     cp = run("python3 python/validate.py", shell=True, text=True, capture_output=True)
