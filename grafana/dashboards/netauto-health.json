@@ -1,44 +1,61 @@
 {
-  "id": null,
-  "uid": "prometheus",
-  "title": "Netauto — Health & Observability",
-  "tags": [
-    "netauto"
-  ],
-  "timezone": "",
-  "schemaVersion": 39,
-  "version": 1,
-  "refresh": "10s",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 2,
+  "links": [],
   "panels": [
     {
-      "type": "row",
-      "title": "Health Summary",
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 0
-      }
+      },
+      "id": 13,
+      "panels": [],
+      "title": "Health Summary",
+      "type": "row"
     },
     {
-      "type": "stat",
-      "title": "Overall Status",
-      "id": 1,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value"
-      },
       "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
         "overrides": [
           {
             "matcher": {
@@ -50,7 +67,6 @@
                 "id": "mappings",
                 "value": [
                   {
-                    "type": "value",
                     "options": {
                       "0": {
                         "text": "degraded"
@@ -58,7 +74,8 @@
                       "1": {
                         "text": "ok"
                       }
-                    }
+                    },
+                    "type": "value"
                   }
                 ]
               },
@@ -68,7 +85,8 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "red"
+                      "color": "red",
+                      "value": 0
                     },
                     {
                       "color": "green",
@@ -81,39 +99,63 @@
           }
         ]
       },
-      "targets": [
-        {
-          "expr": "netauto_status",
-          "refId": "A",
-          "instant": true
-        }
-      ],
       "gridPos": {
         "h": 6,
         "w": 6,
         "x": 0,
         "y": 1
-      }
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "expr": "netauto_status",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Overall Status",
+      "type": "stat"
     },
     {
-      "type": "stat",
-      "title": "Config Drift",
-      "id": 2,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value"
-      },
       "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
         "overrides": [
           {
             "matcher": {
@@ -125,7 +167,6 @@
                 "id": "mappings",
                 "value": [
                   {
-                    "type": "value",
                     "options": {
                       "0": {
                         "text": "clean"
@@ -133,7 +174,8 @@
                       "1": {
                         "text": "drift"
                       }
-                    }
+                    },
+                    "type": "value"
                   }
                 ]
               },
@@ -143,7 +185,8 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green"
+                      "color": "green",
+                      "value": 0
                     },
                     {
                       "color": "red",
@@ -156,41 +199,65 @@
           }
         ]
       },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "expr": "netauto_drift_config",
           "refId": "A"
         }
       ],
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 6,
-        "y": 1
-      }
+      "title": "Config Drift",
+      "type": "stat"
     },
     {
-      "type": "stat",
-      "title": "Neighbors Full Ratio",
-      "id": 3,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value"
-      },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "decimals": 2
+          "decimals": 2,
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
         },
         "overrides": [
           {
@@ -205,7 +272,8 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "red"
+                      "color": "red",
+                      "value": 0
                     },
                     {
                       "color": "yellow",
@@ -222,191 +290,517 @@
           }
         ]
       },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "expr": "netauto_neighbors_ratio",
           "refId": "A"
         }
       ],
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 12,
-        "y": 1
-      }
+      "title": "Neighbors Full Ratio",
+      "type": "stat"
     },
     {
-      "type": "stat",
-      "title": "Routes (Total)",
-      "id": 4,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value"
-      },
-      "targets": [
-        {
-          "expr": "netauto_routes_total",
-          "refId": "A"
-        }
-      ],
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 18,
-        "y": 1
-      }
-    },
-    {
-      "type": "row",
-      "title": "Time Series",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 7
-      }
-    },
-    {
-      "type": "timeseries",
-      "title": "Overall Status (timeline)",
-      "id": 5,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "expr": "netauto_routes_total",
+          "refId": "A"
+        }
+      ],
+      "title": "Routes (Total)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 14,
+      "panels": [],
+      "title": "Time Series",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "max": 1,
           "min": 0,
-          "max": 1
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
         }
       },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "expr": "netauto_status",
           "refId": "A"
         }
       ],
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      }
+      "title": "Overall Status (timeline)",
+      "type": "timeseries"
     },
     {
-      "type": "timeseries",
-      "title": "Neighbors: Full vs Total",
-      "id": 6,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "expr": "netauto_neighbors{state=\"full\"}",
-          "refId": "A",
-          "legendFormat": "full"
-        },
-        {
-          "expr": "netauto_neighbors{state=\"total\"}",
-          "refId": "B",
-          "legendFormat": "total"
-        }
-      ],
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      }
-    },
-    {
-      "type": "timeseries",
-      "title": "Routes Total (trend)",
-      "id": 7,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "expr": "netauto_routes_total",
-          "refId": "A"
-        }
-      ],
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 16
-      }
-    },
-    {
-      "type": "timeseries",
-      "title": "Tests: Passed / Failed / Total",
-      "id": 8,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "expr": "netauto_tests_count{type=\"passed\"}",
-          "refId": "A",
-          "legendFormat": "passed"
-        },
-        {
-          "expr": "netauto_tests_count{type=\"failed\"}",
-          "refId": "B",
-          "legendFormat": "failed"
-        },
-        {
-          "expr": "netauto_tests_count{type=\"total\"}",
-          "refId": "C",
-          "legendFormat": "total"
-        }
-      ],
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      }
-    },
-    {
-      "type": "row",
-      "title": "Quality Ratios",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 24
-      }
-    },
-    {
-      "type": "gauge",
-      "title": "Tests Pass Ratio",
-      "id": 9,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "expr": "netauto_neighbors{state=\"full\"}",
+          "legendFormat": "full",
+          "refId": "A"
+        },
+        {
+          "expr": "netauto_neighbors{state=\"total\"}",
+          "legendFormat": "total",
+          "refId": "B"
+        }
+      ],
+      "title": "Neighbors: Full vs Total",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "expr": "netauto_routes_total",
+          "refId": "A"
+        }
+      ],
+      "title": "Routes Total (trend)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "expr": "netauto_tests_count{type=\"passed\"}",
+          "legendFormat": "passed",
+          "refId": "A"
+        },
+        {
+          "expr": "netauto_tests_count{type=\"failed\"}",
+          "legendFormat": "failed",
+          "refId": "B"
+        },
+        {
+          "expr": "netauto_tests_count{type=\"total\"}",
+          "legendFormat": "total",
+          "refId": "C"
+        }
+      ],
+      "title": "Tests: Passed / Failed / Total",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 15,
+      "panels": [],
+      "title": "Quality Ratios",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
           "max": 1,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -423,35 +817,37 @@
                 "value": 0.99
               }
             ]
-          }
-        }
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
       },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 25
+      },
+      "id": 9,
+      "options": {},
       "targets": [
         {
           "expr": "netauto_tests_pass_ratio",
           "refId": "A"
         }
       ],
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 25
-      }
+      "title": "Tests Pass Ratio",
+      "type": "gauge"
     },
     {
-      "type": "gauge",
-      "title": "Neighbors Full Ratio (5m avg)",
-      "id": 10,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "min": 0,
           "max": 1,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -468,48 +864,35 @@
                 "value": 1
               }
             ]
-          }
-        }
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
       },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 25
+      },
+      "id": 10,
+      "options": {},
       "targets": [
         {
           "expr": "avg_over_time(netauto_neighbors_ratio[5m:])",
           "refId": "A"
         }
       ],
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 25
-      }
+      "title": "Neighbors Full Ratio (5m avg)",
+      "type": "gauge"
     },
     {
-      "type": "stat",
-      "title": "Firing Alerts",
-      "id": 11,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value"
-      },
-      "targets": [
-        {
-          "expr": "sum(ALERTS{alertstate=\"firing\"})",
-          "refId": "A",
-          "instant": true
-        }
-      ],
       "fieldConfig": {
+        "defaults": {},
         "overrides": [
           {
             "matcher": {
@@ -541,54 +924,35 @@
         "w": 6,
         "x": 0,
         "y": 33
-      }
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "sum(ALERTS{alertstate=\"firing\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Firing Alerts",
+      "type": "stat"
     },
     {
-      "type": "table",
-      "title": "Firing Alerts (live)",
-      "id": 12,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "options": {
-        "showHeader": true
-      },
-      "targets": [
-        {
-          "expr": "ALERTS{alertstate=\"firing\"}",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "transformations": [
-        {
-          "id": "labelsToFields"
-        },
-        {
-          "id": "organize",
-          "options": {
-            "indexByName": true,
-            "renameByName": {
-              "Value": "value"
-            },
-            "excludeByName": {
-              "__name__": true
-            },
-            "order": [
-              "alertname",
-              "severity",
-              "instance",
-              "job",
-              "topo",
-              "env",
-              "value",
-              "runbook_url"
-            ]
-          }
-        }
-      ],
       "fieldConfig": {
+        "defaults": {},
         "overrides": [
           {
             "matcher": {
@@ -600,7 +964,6 @@
                 "id": "mappings",
                 "value": [
                   {
-                    "type": "value",
                     "options": {
                       "critical": {
                         "text": "critical"
@@ -608,7 +971,8 @@
                       "warning": {
                         "text": "warning"
                       }
-                    }
+                    },
+                    "type": "value"
                   }
                 ]
               },
@@ -639,9 +1003,9 @@
                 "id": "links",
                 "value": [
                   {
+                    "targetBlank": true,
                     "title": "Open Runbook",
-                    "url": "${__value.text}",
-                    "targetBlank": true
+                    "url": "${__value.text}"
                   }
                 ]
               }
@@ -670,8 +1034,54 @@
         "w": 24,
         "x": 0,
         "y": 39
-      }
+      },
+      "id": 12,
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "expr": "ALERTS{alertstate=\"firing\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Firing Alerts (live)",
+      "transformations": [
+        {
+          "id": "labelsToFields"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "__name__": true
+            },
+            "indexByName": true,
+            "order": [
+              "alertname",
+              "severity",
+              "instance",
+              "job",
+              "topo",
+              "env",
+              "value",
+              "runbook_url"
+            ],
+            "renameByName": {
+              "Value": "value"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
+  ],
+  "preload": false,
+  "refresh": "10s",
+  "schemaVersion": 42,
+  "tags": [
+    "netauto"
   ],
   "templating": {
     "list": []
@@ -688,87 +1098,9 @@
       "1m",
       "5m"
     ]
-  }
-},
-
-{
-  "type": "row",
-  "title": "Per-node OSPF",
-  "gridPos": { "h": 1, "w": 24, "x": 0, "y": 48 }
-},
-{
-  "type": "gauge",
-  "title": "Neighbors Full Ratio (per node)",
-  "id": 21,
-  "datasource": { "type": "prometheus", "uid": "prometheus" },
-  "fieldConfig": {
-    "defaults": {
-      "unit": "percentunit",
-      "min": 0,
-      "max": 1,
-      "thresholds": {
-        "mode": "absolute",
-        "steps": [
-          { "color": "red", "value": 0 },
-          { "color": "yellow", "value": 0.99 },
-          { "color": "green", "value": 1 }
-        ]
-      }
-    }
   },
-  "targets": [
-    { "expr": "netauto_node_neighbors_ratio", "refId": "A", "legendFormat": "{{node}}" }
-  ],
-  "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
-  "gridPos": { "h": 8, "w": 12, "x": 0, "y": 49 }
-},
-{
-  "type": "timeseries",
-  "title": "Neighbors — Full vs Total (per node)",
-  "id": 22,
-  "datasource": { "type": "prometheus", "uid": "prometheus" },
-  "targets": [
-    { "expr": "netauto_node_neighbors{state=\"full\"}",  "refId": "A", "legendFormat": "full {{node}}" },
-    { "expr": "netauto_node_neighbors{state=\"total\"}", "refId": "B", "legendFormat": "total {{node}}" }
-  ],
-  "gridPos": { "h": 8, "w": 12, "x": 12, "y": 49 }
-},
-{
-  "type": "table",
-  "title": "Per-node Summary (live)",
-  "id": 23,
-  "datasource": { "type": "prometheus", "uid": "prometheus" },
-  "options": { "showHeader": true },
-  "targets": [
-    { "expr": "netauto_node_neighbors{state=\"full\"}",  "refId": "A", "instant": true },
-    { "expr": "netauto_node_neighbors{state=\"total\"}", "refId": "B", "instant": true },
-    { "expr": "netauto_node_neighbors_ratio",           "refId": "C", "instant": true },
-    { "expr": "netauto_node_routes",                    "refId": "D", "instant": true }
-  ],
-  "transformations": [
-    { "id": "labelsToFields" },
-    {
-      "id": "organize",
-      "options": {
-        "indexByName": true,
-        "renameByName": { "Value": "value" },
-        "excludeByName": { "__name__": true, "job": true, "instance": true },
-        "order": ["node","state","value"]
-      }
-    },
-    {
-      "id": "groupBy",
-      "options": {
-        "fields": { "node": { "aggregations": ["groupby"] }, "state": { "aggregations": ["skip"] }, "value": { "aggregations": ["last"] } }
-      }
-    }
-  ],
-  "fieldConfig": {
-    "overrides": [
-      { "matcher": { "id": "byName", "options": "value" }, "properties": [ { "id": "decimals", "value": 2 } ] },
-      { "matcher": { "id": "byName", "options": "node"  }, "properties": [ { "id": "custom.width", "value": 200 } ] }
-    ]
-  },
-  "gridPos": { "h": 9, "w": 24, "x": 0, "y": 57 }
+  "timezone": "",
+  "title": "Netauto — Health & Observability",
+  "uid": "prometheus",
+  "version": 1
 }
-
