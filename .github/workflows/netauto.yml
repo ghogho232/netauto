@@ -345,3 +345,96 @@ jobs:
         if: always()
         run: |
           sudo containerlab destroy -t lab/netauto.clab.yml -c
+
+  notify_full:
+    name: Notify Full CI Result to Slack
+    runs-on: ubuntu-22.04
+    needs: full
+    if: always() && needs.full.result != 'skipped'
+    env:
+      OWNER: ${{ github.repository_owner }}
+      REPO: ${{ github.event.repository.name }}
+    steps:
+      # FULL 아티팩트 다운로드
+      - name: Download full artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: netauto-artifacts-full
+          path: full_artifacts
+
+      # FULL junit 결과 파싱
+      - name: Parse Full JUnit summary
+        id: junit_full
+        shell: bash
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET, pathlib, os
+          p = pathlib.Path("full_artifacts/tests/artifacts/junit-full.xml")
+          tests=fail=err=skip=0
+          if p.exists():
+            root = ET.fromstring(p.read_text(encoding="utf-8"))
+            suites = root.findall(".//testsuite") or ([root] if root.tag=="testsuite" else (list(root) if root.tag=="testsuites" else []))
+            for s in suites:
+              tests += int(s.attrib.get("tests",0))
+              fail  += int(s.attrib.get("failures",0))
+              err   += int(s.attrib.get("errors",0))
+              skip  += int(s.attrib.get("skipped",0))
+          passed = max(0, tests - fail - err - skip)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"tests={tests}\n")
+            f.write(f"passed={passed}\n")
+            f.write(f"failed={fail+err}\n")
+            f.write(f"skipped={skip}\n")
+          PY
+
+      # DRIFT_STATUS 읽기
+      - name: Read drift status
+        id: drift_full
+        shell: bash
+        run: |
+          DRIFT=0
+          if [ -f "full_artifacts/DRIFT_STATUS" ]; then
+            DRIFT=$(cat full_artifacts/DRIFT_STATUS || echo 0)
+          fi
+          echo "status=$DRIFT" >> $GITHUB_OUTPUT
+
+      # Slack Webhook으로 FULL 결과 알림 전송
+      - name: Send Full CI Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        shell: bash
+        run: |
+          STATUS_COLOR="good"
+          SUMMARY_TEXT="Netauto FULL CI passed"
+          if [ "${{ needs.full.result }}" != "success" ] || [ "${{ steps.drift_full.outputs.status }}" != "0" ]; then
+            STATUS_COLOR="#E01E5A"
+            SUMMARY_TEXT="Netauto FULL CI has issues"
+          fi
+
+          PAGES_URL="https://${OWNER}.github.io/${REPO}/docs/report.md"
+
+          cat > payload.json <<JSON
+          {
+            "text": "Netauto FULL CI Result",
+            "attachments": [
+              {
+                "color": "${STATUS_COLOR}",
+                "title": "${SUMMARY_TEXT}",
+                "fields": [
+                  { "title": "Job", "value": "full", "short": true },
+                  { "title": "Branch", "value": "${{ github.ref_name }}", "short": true },
+                  { "title": "Commit", "value": "${{ github.sha }}", "short": false },
+                  { "title": "Pytest (FULL)", "value": "Passed: ${{ steps.junit_full.outputs.passed }}, Failed: ${{ steps.junit_full.outputs.failed }}, Skipped: ${{ steps.junit_full.outputs.skipped }}", "short": false },
+                  { "title": "Drift (FULL)", "value": "${{ steps.drift_full.outputs.status }}", "short": true },
+                  { "title": "Report", "value": "<${PAGES_URL}|Open Latest Report>", "short": false }
+                ]
+              }
+            ]
+          }
+          JSON
+
+          echo "Debug FULL payload:"
+          cat payload.json
+
+          curl -f -sS -X POST -H 'Content-type: application/json' \
+            --data @payload.json "$SLACK_WEBHOOK_URL"
