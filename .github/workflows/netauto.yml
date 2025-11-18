@@ -242,37 +242,43 @@ jobs:
         run: promtool check rules prom/alert_rules.yml
 
   full:
-    name: CI Full (lab smoke-test)
+    name: CI Full (lab E2E)
     runs-on: ubuntu-22.04
     needs: light
-    # main에 push되거나, 수동 실행에서 mode=FULL일 때만 실행
+    # main 브랜치 push 또는 수동 실행(FULL)일 때만 동작
     if: |
       github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'FULL' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main')
     steps:
+      # 코드 체크아웃
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Python 설정
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install dependencies (simple)
+      # venv + requirements 설치
+      - name: Install dependencies
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install -U pip
           pip install -r requirements.txt
 
+      # containerlab 설치
       - name: Install containerlab
         run: |
           bash scripts/ci/install_containerlab.sh
 
+      # lab 올리기
       - name: Deploy lab with containerlab
         run: |
           sudo containerlab deploy -t lab/netauto.clab.yml
 
+      # Ansible site.yml로 전체 구성/검증
       - name: Run Ansible site.yml
         env:
           ANSIBLE_STDOUT_CALLBACK: yaml
@@ -281,6 +287,60 @@ jobs:
           cd ansible
           ansible-playbook -i inventory.ini site.yml
 
+      # Drift 체크 (validate.py) - 실패해도 CI 전체를 바로 깨지 않게 wrap
+      - name: Run drift check (validate.py)
+        id: drift_full
+        env:
+          NETAUTO_PREFIX: "clab-netauto"
+        run: |
+          . .venv/bin/activate
+          set +e
+          python python/validate.py
+          CODE=$?
+          echo "exit_code=$CODE" >> $GITHUB_OUTPUT
+          echo "$CODE" > DRIFT_STATUS
+          # 여기서는 항상 0으로 종료해서 이후 단계(pytest 등)는 계속 진행
+          exit 0
+
+      # pytest로 E2E 통합 테스트 (OSPF, ping, drift 등)
+      - name: Run pytest E2E connectivity tests
+        env:
+          NETAUTO_PREFIX: "clab-netauto"
+        run: |
+          . .venv/bin/activate
+          mkdir -p tests/artifacts
+          pytest tests/test_connectivity.py -q --junitxml=tests/artifacts/junit-full.xml
+
+      # FRR 라우팅 테이블 snapshot 수집
+      - name: Collect routes snapshot
+        env:
+          NETAUTO_PREFIX: "clab-netauto"
+        run: |
+          . .venv/bin/activate
+          python python/collect_routes.py
+
+      # Markdown 리포트 생성 (docs/report.md)
+      - name: Generate health report
+        env:
+          NETAUTO_PREFIX: "clab-netauto"
+        run: |
+          . .venv/bin/activate
+          python python/report.py
+
+      # FULL용 아티팩트 업로드
+      - name: Upload full artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netauto-artifacts-full
+          path: |
+            tests/artifacts/**
+            python/out/**
+            python/routes.json
+            docs/report.md
+            DRIFT_STATUS
+
+      # lab 정리 (성공/실패와 관계없이 항상 실행)
       - name: Destroy lab
         if: always()
         run: |
