@@ -4,6 +4,16 @@ on:
   pull_request:
   push:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "CI mode (LIGHT or FULL)"
+        required: false
+        default: "LIGHT"
+        type: choice
+        options:
+          - LIGHT
+          - FULL
 
 jobs:
   # 1. Light CI Job (테스트 & 리포트 생성)
@@ -231,3 +241,39 @@ jobs:
       - name: Validate alert rules
         run: promtool check rules prom/alert_rules.yml
 
+  full:
+    name: CI Full (lab smoke-test)
+    runs-on: ubuntu-22.04
+    needs: light
+    # main에 push되거나, 수동 실행에서 mode=FULL일 때만 실행
+    if: |
+      github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'FULL' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies (simple)
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Install containerlab
+        run: |
+          bash scripts/ci/install_containerlab.sh
+
+      - name: Deploy lab with containerlab
+        run: |
+          sudo containerlab deploy -t lab/netauto.clab.yml
+
+      - name: Destroy lab
+        if: always()
+        run: |
+          sudo containerlab destroy -t lab/netauto.clab.yml -c
