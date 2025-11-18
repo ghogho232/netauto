@@ -44,6 +44,9 @@
       raw: ping -c 3 10.0.2.100
       register: ping_out
       changed_when: false
+      retries: 5
+      delay: 3
+      until: ping_out.rc == 0
 
     - name: Show ping result
       debug:
