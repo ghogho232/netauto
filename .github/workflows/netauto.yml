@@ -273,6 +273,14 @@ jobs:
         run: |
           sudo containerlab deploy -t lab/netauto.clab.yml
 
+      - name: Run Ansible site.yml
+        env:
+          ANSIBLE_STDOUT_CALLBACK: yaml
+        run: |
+          . .venv/bin/activate
+          cd ansible
+          ansible-playbook -i inventory.ini site.yml
+
       - name: Destroy lab
         if: always()
         run: |
