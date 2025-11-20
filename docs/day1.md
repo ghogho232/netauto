@@ -1,19 +1,3 @@
-📌 수동 추가 절차
-
-프로젝트 안에서 docs 디렉토리 만들기
-
-cd ~/netauto
-mkdir -p docs
-
-
-day1.md 파일 생성
-
-nano docs/day1.md
-
-
-내용 붙여넣기
-아래 내용을 편집기에 붙여넣으세요:
-
 # Day 1 실습 정리: VMware Ubuntu + Containerlab + FRR(OSPF) 최소 토폴로지
 
 ## 1) 목표
