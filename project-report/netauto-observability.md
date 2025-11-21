@@ -1,5 +1,34 @@
 # Observability - Prometheus · Grafana · Alertmanager · Slack 
 
+## 목차 (Table of Contents)
+
+- [1. 개요](#1-개요)
+- [2. Observability 전체 아키텍처](#2-observability-전체-아키텍처)
+- [3. Prometheus 구성](#3-prometheus-구성)
+- [4. Recording Rules](#4-recording-rules)
+- [5. Grafana 대시보드 구성](#5-grafana-대시보드-구성)
+  - [5.1 디렉터리 구조](#51-디렉터리-구조)
+  - [5.2 Netauto — Health & Observability 대시보드](#52-netauto--health--observability-대시보드)
+  - [5.3 Netauto 기본 대시보드](#53-netauto-기본-대시보드)
+- [6. Alertmanager 구성](#6-alertmanager-구성)
+  - [6.1 Prometheus Alert Rules](#61-prometheus-alert-rules)
+  - [6.2 Alertmanager → Slack 연동](#62-alertmanager--slack-연동)
+  - [6.3 Grafana Alert → Alertmanager 연동](#63-grafana-alert--alertmanager-연동)
+  - [6.4 Netauto Alert Pipeline 요약](#64-netauto-alert-pipeline-요약-다이어그램)
+  - [6.5 이 구성을 통해 얻는 효과](#65-이-구성을-통해-얻는-효과)
+- [7. 전체 Observability 흐름](#7-전체-observability-흐름)
+  - [7.1 R1/R2/H1/H2 metrics export](#71-r1r2h1h2-metrics-export)
+  - [7.2 Prometheus — scrape 단계](#72-prometheus--scrape-단계)
+  - [7.3 Recording / Query 단계](#73-recording--query--단계)
+  - [7.4 Grafana — 시각화 단계](#74-grafana--시각화-단계)
+  - [7.5 Alert Evaluation 단계](#75-alert-evaluation-단계)
+  - [7.6 Alertmanager — 알람 집계 및 라우팅](#76-alertmanager--알람-집계-및-라우팅)
+  - [7.7 Slack — 운영자 시점](#77-slack--운영자-시점)
+  - [7.8 흐름 요약](#78-흐름-요약)
+- [8. TLS/HTTPS 인증서 트러블슈팅](#8-tlshttps-인증서-트러블슈팅)
+- [9. Observability 문제 분석 및 해결](#9-observability-문제-분석-및-해결)
+- [10. 결론](#10-결론)
+
 ## 1. 개요
 
 Prometheus, Grafana, Alertmanager, Slack을 통합해
