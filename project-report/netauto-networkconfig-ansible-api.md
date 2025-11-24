@@ -1,4 +1,4 @@
-# Netauto - 네트워크 구성, Ansible, API(Unicorn) 상세 보고서
+# Netauto - 네트워크 구성, Ansible, API(Unicorn) 
 
 ## 목차
 
