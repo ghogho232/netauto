@@ -1,5 +1,6 @@
 # Netauto: NetDevOps 기반 E2E 네트워크 자동화 프로젝트
 
+
 네트워크를 코드처럼 다루는 NetDevOps를 바탕으로 Netauto 프로젝트는 다음 전체 흐름을 모두 자동화를 목표로 함
 
 - 컨테이너 기반 네트워크 랩 생성
@@ -10,8 +11,13 @@
 - GitHub Actions 기반 CI/CD 파이프라인
 - Slack으로 결과 요약 및 알림 전송
 
+## 프로젝트 개별 항목 상세
+본 문서에서 다루는 내용들을 더 구체적으로 정리한 문서들이다
 
----
+### [네트워크 구성(ansible)](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-networkconfig-ansible-api.md)
+### [Github Action, CI/CD](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-cicd.md)
+### [Observability-Prometheus, Grafana, Slack](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-observability.md)
+
 
 ## 1. 프로젝트 목표와 배경
 
@@ -21,33 +27,36 @@
 
 | 문제 | 설명 |
 |------|--------|
-| 수동 구성 | CLI로 직접 설정 → 오류 발생 및 재현성 부족 |
+| 수동 구성 | CLI로 직접 설정 -> 오류 발생 및 재현성 부족 |
 | 테스트 부재 | 변경 후 정상 동작을 보장할 자동 테스트 없음 |
 | 드리프트 발생 | 템플릿/표준과 실제 네트워크의 불일치 |
 | 관측 불가 | 모니터링·알람 구조 미흡 |
 | CI/CD 미적용 | 코드 변경이 실 구성/테스트로 이어지지 않음 |
 
-- 변경 이력이 남지 않아, 장애 발생 시 "누가 무엇을 바꿨는지"를 추적하기 어려움
-- 테스트 없이 변경이 이루어져, 야간에 예기치 못한 서비스 장애가 발생
-- 새로운 표준 구성(예: OSPF 정책, ACL 템플릿)을 적용해도, 실제 장비에 언제 반영되었는지 알 수 없음
+- 변경 이력이 남지 않아, 장애 발생 시 누가 무엇을 바꿨는지 추적하기 어려움
+- 테스트 없이 변경이 이루어져 야간에 예기치 못한 서비스 장애가 발생
+- 새로운 표준 구성(예: OSPF 정책, ACL 템플릿)을 적용해도 실제 장비에 언제 반영되었는지 알 수 없음
 
-### 1.2 Netauto가 지향점
-
-Netauto는 다음과 같은 상태를 목표로 설계
+### 1.2 Netauto프로젝트의 목표
 
 1. 네트워크를 코드로 정의한다 (Infrastructure as Code)
-2. 네트워크 변경은 항상 GitHub Pull Request로 시작된다
-3. 변경이 발생하면 CI가 다음을 자동으로 수행한다
+2. 네트워크 변경은 항상 GitHub Pull Request로 시작
+3. 변경이 발생하면 CI가 다음을 자동으로 수행
    - 구성 템플릿과 코드의 정합성 검증
-   - 실제 Containerlab 기반 랩에서 라우터/호스트를 생성
+   - 실제 Containerlab 기반 랩에서 라우터/호스트 생성
    - Ansible로 구성을 배포
    - pytest로 엔드투엔드 테스트 시행
    - 드리프트 감지 및 리포트 생성
-4. 모든 결과를 GitHub Pages와 Slack으로 투명하게 공개한다
+4. observability 확보
+    - Prometheus로 네트워크 상태 메트릭으로 수집
+    - Grafana로 수집된 메트릭을 시각화하고 실시간 상태 대시보드 제공
+    - Alertmanager로 이상 감지
+    - Slack으로 경고 메시지, 테스트 요약, 드리프트 상태 자동 전송
+    - GitHub Pages로 최신 네트워크 리포트 자동 게시
 
-"NetDevOps 파이프라인의 축소판"으로 실제 기업의 SRE, NetDevOps, 인프라 운영 팀의 방식을 최대한 모방
+**NetDevOps 파이프라인의 축소판**으로 실제 기업의 SRE, NetDevOps, 인프라 운영 팀의 방식을 최대한 모방
 
----
+
 
 ## 2. 전체 아키텍처
 
@@ -168,7 +177,7 @@ netauto/
       validate-observability.yml
 ```
 
-각 디렉터리는 다음 역할을 담당합니다.
+각 디렉터리는 다음 역할을 담당한다
 
 - `ansible/` : 라우터와 호스트를 자동화하는 모든 플레이북과 템플릿
 - `lab/` : Containerlab 토폴로지 정의 및 생성된 데이터
@@ -178,22 +187,21 @@ netauto/
 - `docs/` : 자동 생성 리포트와 일자별 진행 기록
 - `.github/workflows/` : GitHub Actions CI/CD 정의
 
----
 
-## 5. 구성 요소 상세 설명
 
-### 5.1 Containerlab – 네트워크 생성
+## 5. 구성 요소 설명
+
+### 5.1 [Containerlab - 네트워크 생성](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-networkconfig-ansible-api.md#31-containerlab-%ED%86%A0%ED%8F%B4%EB%A1%9C%EC%A7%80-%ED%8C%8C%EC%9D%BC-netautoclabyml)
 
 lab/netauto.clab.yml 사용하여 다음을 생성
 
 - FRR 라우터 2대 (r1, r2)
 - Linux host 2대 (h1, h2)
-- 인터페이스/케이블/브리지 자동 배치
+- 인터페이스/케이블/브릿지 자동 생성
 
-### 5.2 Ansible – 구성 배포 + 검증
+### [5.2 Ansible - 구성 배포 + 검증](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-networkconfig-ansible-api.md#4-ansible-%EA%B5%AC%EC%84%B1)
 
-site.yml 구성
-
+### [site.yml/deploy_all.yml 구성(전체 구성 파일)](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-networkconfig-ansible-api.md#433-deploy_frryml)
 - 라우터 인터페이스 IP 설정
 - IPv4 forwarding enable
 - FRR 설정 템플릿 렌더링
@@ -202,73 +210,67 @@ site.yml 구성
 - OSPF neighbor + route 검증
 - End-to-End ping 테스트
 
-verify.yml 주요 검증
-
+### [verify.yml 주요 검증](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-networkconfig-ansible-api.md#434-verifyyml)
 - OSPF neighbor(Full) 개수
 - 라우팅 테이블 정상 확인
 - r1 ↔ r2 OSPF Hello/Dead 확인
-- h1 → h2 ping 성공 여부
+- h1 -> h2 ping 성공 여부
 
-### 5.3 Python 스크립트 – 수집·검증·리포트
-validate.py — 드리프트 감지
+### [5.3 Python 스크립트 - 수집, 검증, 리포트](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-cicd.md#3-light-job---%EA%B8%B0%EB%B3%B8-ci-%EB%B0%8F-%EB%A6%AC%ED%8F%AC%ED%8A%B8-%EC%83%9D%EC%84%B1)
 
+### [validate.py — 드리프트 감지](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-cicd.md#335-%EB%93%9C%EB%A6%AC%ED%94%84%ED%8A%B8-%EA%B2%80%EC%82%AC-validatepy)
 - 템플릿 vs 실제 running-config 비교
 - JSON diff 생성
 - drift count 출력
 
-collect_routes.py — 상태 수집
-
+### collect_routes.py — 상태 수집
 - vtysh show ip route
 - vtysh show ip ospf neighbor
 - routes.json, neighbors.json 저장
 
-report.py — Markdown 생성
-
+### report.py — Markdown 생성
 - 라우팅 테이블 요약
 - OSPF neighbor 요약
 - 테스트 결과
 - drift 결과
 - Prometheus snapshot
-docs/report.md로 저장 → GitHub Pages 자동 배포
+- docs/report.md로 저장 -> GitHub Pages 자동 배포
 
-### 5.4 pytest – 네트워크 테스트 자동화
+### [5.4 pytest - 네트워크 테스트 자동화](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-cicd.md#337-pytest-%EC%8B%A4%ED%96%89--%EC%83%81%ED%83%9C-%EC%88%98%EC%A7%91--%EB%A6%AC%ED%8F%AC%ED%8A%B8-%EC%83%9D%EC%84%B1)
 
 | 테스트                          | 설명                             |
 | ------------------------------ | ---------------------------------|
 | test_vtysh_available           | vtysh 정상 실행 여부              |
-| test_ping_h1_to_h2             | h1 → h2 ping 성공                |
+| test_ping_h1_to_h2             | h1 -> h2 ping 성공                |
 | test_ospf_neighbors_full       | neighbor Full 여부               |
-| test_r1_has_ospf_route_to_h2   | r1 → 10.0.2.0/24 OSPF route 존재 |
-| test_r2_has_ospf_route_to_h1   | r2 → 10.0.1.0/24 OSPF route 존재 |
+| test_r1_has_ospf_route_to_h2   | r1 -> 10.0.2.0/24 OSPF route 존재 |
+| test_r2_has_ospf_route_to_h1   | r2 -> 10.0.1.0/24 OSPF route 존재 |
 | test_no_drift_against_template | drift=0 확인                     |
 
 
-### 5.5 Observability – Prometheus/Grafana/Alertmanager
-Prometheus
+### [5.5 Observability - Prometheus/Grafana/Alertmanager](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-observability.md)
 
+### [Prometheus](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-observability.md#3-prometheus-%EA%B5%AC%EC%84%B1)
 - 라우터/호스트/Netauto FastAPI exporter scrape
 - OSPF 상태/route count
 - recording rules
 
-Grafana
+### [Grafana](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-observability.md#5-grafana-%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C-%EA%B5%AC%EC%84%B1)
+- 자동 dashboard provisioning으로 설정 자동 반영
+- OSPF neighbor health, drift등 네트워크 상태 및 테스트 결과 시각화
 
-- 자동 dashboard provisioning
-- OSPF neighbor health, drift, ICMP RTT 시각화
-
-Alertmanager
-
+### [Alertmanager](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-observability.md#6-alertmanager-%EA%B5%AC%EC%84%B1)
+- PromQL을 사용한이상상태 파악
 - Slack 알람
-- severity, team 기반 라우팅
----
 
-## 6. GitHub Actions CI/CD 파이프라인
+## 6. [GitHub Actions CI/CD 파이프라인](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-cicd.md)
 
-Netauto는 2개의 CI 파이프라인으로 구성된다.
+### Netauto는 2개의 CI 파이프라인으로 구성된다
 
+
+### [6.1 LIGHT CI (빠른 논리 테스트)](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-cicd.md#3-light-job---%EA%B8%B0%EB%B3%B8-ci-%EB%B0%8F-%EB%A6%AC%ED%8F%AC%ED%8A%B8-%EC%83%9D%EC%84%B1)
 ---
-### 6.1 LIGHT CI (빠른 논리 테스트)
----
-실 Containerlab 없이 수행하는 빠른 파이프라인
+**실 Containerlab 없이** 수행하는 빠른 파이프라인
 
 | 단계              | 설명                  |
 | --------------- | ------------------- |
@@ -279,9 +281,9 @@ Netauto는 2개의 CI 파이프라인으로 구성된다.
 | GitHub Pages 배포 | report 자동 배포        |
 | Slack 알림        | 결과 요약 발송            |
 
----
-### 6.2 FULL CI (실제 Lab 자동 생성 + E2E 검증)
----
+
+### [6.2 FULL CI (실제 Lab 자동 생성 + E2E 검증)](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-cicd.md#7-full-job---containerlab-%EA%B8%B0%EB%B0%98-e2e-ci)
+
 | 단계                   | 설명                         |
 | -------------------- | -------------------------- |
 | containerlab deploy  | 네트워크 생성                    |
@@ -294,10 +296,9 @@ Netauto는 2개의 CI 파이프라인으로 구성된다.
 | GitHub Pages 배포      | 최신 리포트 배포                  |
 | Slack 알림             | FULL 결과 전송                 |
 
-### 6.3 Slack 알림
+### [6.3 Slack 알림](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-cicd.md#8-notify_full-job---full-%EA%B2%B0%EA%B3%BC-slack-%EC%95%8C%EB%A6%BC)
 
 `notify` 잡은 LIGHT와 FULL 잡의 결과를 바탕으로 Slack에 정보 전송
-
 - 브랜치 이름
 - 커밋 SHA
 - pytest 결과 (Passed / Failed / Skipped 수)
@@ -306,7 +307,6 @@ Netauto는 2개의 CI 파이프라인으로 구성된다.
 
 색상으로 성공/실패를 구분하여 CI 상태를 확인할 수 있도록 구성함
 
----
 
 ## 7. 로컬 실행 방법
 
@@ -348,7 +348,7 @@ containerlab destroy -t lab/netauto.clab.yml -c
 
 ---
 
-## 8. 자동 생성 리포트 예시 (docs/report.md)
+## 8. [자동 생성 리포트 예시 (docs/report.md)](https://github.com/ghogho232/netauto/blob/main/project-report/netauto-networkconfig-ansible-api.md#1-reportmd)
 
 리포트는 다음 정보를 포함함
 
@@ -360,25 +360,60 @@ containerlab destroy -t lab/netauto.clab.yml -c
 - CI job metadata
 - 생성 시간
 
-예
-```yaml
-Pytest Results: Passed: 6 Failed: 0 Skip: 0
-Drift: 0
-OSPF Neighbors:
- - r1: 1 Full neighbor
- - r2: 1 Full neighbor
-Routes:
- - r1 → 10.0.2.0/24 OK
- - r2 → 10.0.1.0/24 OK
-Report generated: 2025-11-12 16:00
-```
+## clab-netauto-r1
+### OSPF Neighbors
+``````
+Neighbor ID     Pri State           Up Time         Dead Time Address         Interface                        RXmtL RqstL DBsmL
+172.20.20.4       1 Full/-          6h14m36s          33.026s 10.0.12.2       eth1:10.0.12.1                       0     0     0
+``````
+### Routes
+``````
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
+       f - OpenFabric,
+       > - selected route, * - FIB route, q - queued, r - rejected, b - backup
+       t - trapped, o - offload failure
+
+K>* 0.0.0.0/0 [0/0] via 172.20.20.1, eth0, 06:15:02
+O   10.0.1.0/24 [110/10] is directly connected, eth2, weight 1, 06:14:36
+C>* 10.0.1.0/24 is directly connected, eth2, 06:14:48
+O>* 10.0.2.0/24 [110/20] via 10.0.12.2, eth1, weight 1, 06:14:26
+O   10.0.12.0/30 [110/10] is directly connected, eth1, weight 1, 06:14:36
+C>* 10.0.12.0/30 is directly connected, eth1, 06:14:48
+C>* 172.20.20.0/24 is directly connected, eth0, 06:15:02
+``````
+
+## clab-netauto-r2
+### OSPF Neighbors
+``````
+Neighbor ID     Pri State           Up Time         Dead Time Address         Interface                        RXmtL RqstL DBsmL
+172.20.20.3       1 Full/-          6h14m36s          32.538s 10.0.12.1       eth1:10.0.12.2                       0     0     0
+``````
+### Routes
+``````
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
+       f - OpenFabric,
+       > - selected route, * - FIB route, q - queued, r - rejected, b - backup
+       t - trapped, o - offload failure
+
+K>* 0.0.0.0/0 [0/0] via 172.20.20.1, eth0, 06:15:02
+O>* 10.0.1.0/24 [110/20] via 10.0.12.1, eth1, weight 1, 06:14:26
+O   10.0.2.0/24 [110/10] is directly connected, eth2, weight 1, 06:14:36
+C>* 10.0.2.0/24 is directly connected, eth2, 06:14:48
+O   10.0.12.0/30 [110/10] is directly connected, eth1, weight 1, 06:14:36
+C>* 10.0.12.0/30 is directly connected, eth1, 06:14:48
+C>* 172.20.20.0/24 is directly connected, eth0, 06:15:02
+``````
 ---
 
 ## 9. 장애 대응 (Runbook)
 | 증상 | 원인 | 해결 |
 |------|----------|-----------|
 | OSPF 이웃이 Full 상태가 되지 않음 | 인터페이스 IP 또는 OSPF 설정 불일치, 수렴 시간 부족 | `verify.yml`의 pause 시간을 늘리고, `show ip ospf neighbor` 출력 분석 |
-| h1 → h2 ping 실패 | 기본 라우트 미설정, OSPF 경로 미학습 | 호스트 관련 플레이북(`configure_hosts.yml`)과 라우팅 테이블을 확인 |
+| h1 -> h2 ping 실패 | 기본 라우트 미설정, OSPF 경로 미학습 | 호스트 관련 플레이북(`configure_hosts.yml`)과 라우팅 테이블을 확인 |
 | 드리프트 발생 | 수동으로 장비 설정이 변경되었거나 템플릿 outdated | `validate.py` diff 결과를 보고 템플릿 또는 실제 구성을 정리 |
 | GitHub Actions FULL 실패 | Docker 권한, containerlab 설치 문제 | RUNNER에서 `sudo` 사용 여부, 설치 스크립트 로그 확인 |
 | Prometheus가 메트릭을 스크레이프하지 못함 | exporter 서비스 다운, 포트 변경 | FastAPI 서버 상태 확인, `prometheus.yml` 타겟 재검증 |
@@ -386,7 +421,7 @@ Report generated: 2025-11-12 16:00
 
 ---
 
-## 10. 이 프로젝트로 배울 수 있었던 것
+## 10. 결론
 
 - Containerlab을 사용한 재현 가능한 네트워크 랩 구성 방법
 - Ansible을 이용한 라우터 및 호스트 구성 자동화
@@ -396,4 +431,4 @@ Report generated: 2025-11-12 16:00
 - GitHub Actions를 이용한 네트워크 CI/CD 파이프라인 구현
 - Slack과 연동된 ChatOps 스타일의 운영 체계
 
----
+Netauto는 실제 현업에서 사용되는 개념들을 가능한 활용한 작은 실제 시스템을 목표로 구현에 성공했다
