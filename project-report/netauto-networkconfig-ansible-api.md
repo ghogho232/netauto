@@ -81,9 +81,17 @@ Netauto의 전체 구조를 큰 틀에서 보면 다음과 같은 계층으로 �
 - Ansible로 **구성을 넣고 테스트**  
 - 그 결과를 netauto-api가 **헬스 체크 API 및 메트릭으로 변환**
 
+![system-architecture](./images/ansible1.png)
 ---
 
 ## 3. 네트워크 토폴로지 구성
+
+h1 (10.0.1.100/24)          h2 (10.0.2.100/24)
+        |                           |
+        |                           |
+   r1 (FRR)  ---- 10.0.12.0/30 ---- r2 (FRR)
+        |                           |
+  LAN 10.0.1.0/24            LAN 10.0.2.0/24
 
 ### 3.1 Containerlab 토폴로지 파일 (`netauto.clab.yml`)
 
