@@ -81,7 +81,7 @@ Netauto의 전체 구조를 큰 틀에서 보면 다음과 같은 계층으로 �
 - Ansible로 **구성을 넣고 테스트**  
 - 그 결과를 netauto-api가 **헬스 체크 API 및 메트릭으로 변환**
 
-![system-architecture](./images/ansible1.png)
+![system-architecture](https://github.com/ghogho232/netauto/blob/main/images/ansible1.png)
 ---
 
 ## 3. 네트워크 토폴로지 구성
