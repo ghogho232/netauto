@@ -86,12 +86,14 @@ Netauto의 전체 구조를 큰 틀에서 보면 다음과 같은 계층으로 �
 
 ## 3. 네트워크 토폴로지 구성
 
+```text
 h1 (10.0.1.100/24)          h2 (10.0.2.100/24)
         |                           |
         |                           |
    r1 (FRR)  ---- 10.0.12.0/30 ---- r2 (FRR)
         |                           |
   LAN 10.0.1.0/24            LAN 10.0.2.0/24
+```
 
 ### 3.1 Containerlab 토폴로지 파일 (`netauto.clab.yml`)
 
@@ -160,7 +162,7 @@ Containerlab를 통해 `clab-netauto` 라는 랩이 생성되며
 
 - `h1 (10.0.1.100)` <--> `h2 (10.0.2.100)` 사이가  
 - `r1 <--> r2` OSPF 라우팅을 통해 **End-to-End 통신 가능**한 구조가 됨
-
+![ping-test](https://github.com/ghogho232/netauto/blob/main/images/ansible2.png)
 ---
 
 ### 3.3 FRRouting(OSPF) 설정
@@ -529,6 +531,8 @@ ospf_networks:
 이 플레이북은 사실상 **수동으로 확인해야 할 것들을 코드화**해 놓은 것으로  
 Netauto의 **네트워크 헬스 체크**의 첫 단계라고 볼 수 있음
 
+![verify1](https://github.com/ghogho232/netauto/blob/main/images/ansible5_verify.png)
+![verify2](https://github.com/ghogho232/netauto/blob/main/images/ansible5_verify2.png)
 ---
 
 #### 4.3.5 `deploy_all.yml` 및 보조 플레이북
@@ -810,6 +814,7 @@ def health():
 이 JSON은 CI, 대시보드, 외부 도구 등에서  
 **Netauto 환경의 건강 상태를 한 번에 판단**할 수 있게 해준다.
 
+![health](https://github.com/ghogho232/netauto/blob/main/images/ansible3_health.png)
 ---
 
 ### 5.3 `metrics.py` - Prometheus 호환 메트릭 엔드포인트
@@ -914,6 +919,7 @@ def main():
 - CLI 모드에서 `--snapshot` 옵션을 주면 `docs/metrics.txt` 로 결과를 덤프
 - CI나 로컬 디버깅 시 Prometheus 없이도 메트릭 출력 내용을 확인할 수 있다
 
+![metrics](https://github.com/ghogho232/netauto/blob/main/images/ansible4_metrics.png)
 ---
 
 ### 5.4 netauto-api가 전체 파이프라인에서 맡는 역할
