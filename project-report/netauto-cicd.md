@@ -1,4 +1,4 @@
-# CI/CD 및 GitHub Actions
+# Netauto 프로젝트 CI/CD 및 GitHub Actions
 
 ## 목차
 - [1. 개요](#1-개요)
@@ -49,10 +49,72 @@
 
 
 ---
+## 전체 아키텍처
 
+```text
+                       +--------------------------+
+                       |          GitHub          |
+                       |  (Repo / Actions / Pages)|
+                       +--------------------------+
+                                    |
+                +-------------------+-------------------+
+                |                                       |
+                v                                       v
+        +----------------+                     +-------------------------+
+        |  netauto.yml   |                     | validate-observability  |
+        |   (Main CI)    |                     |    (Observability CI)   |
+        +----------------+                     +-------------------------+
+                 |                                         |
+      +----------+-----------+                             |
+      |          |           |                             |
+      v          v           v                             v
++-----------+ +--------+  +---------+         +---------------------------+
+|  light    | | publish|  | notify  |         |  checks (observability)   |
+| (no lab)  | +--------+  +---+-----+         +---------------------------+
++-----------+     |           |                             |
+      |           |           |                             |
+      |           |           |          +--------------------------------------+
+      |           |           |          |                                      |
+      v           |           v          v                                      v
++--------------+  |     +-----------+  +----------------+   +-----------------------+
+|  artifacts   |  |     |  Slack    |  | Prometheus     |   |  Prometheus Rules     |
+| (junit.xml,  |  |     | (Light)   |  | config lint    |   | check (alert_rules)   |
+|  report.md,  |  |     +-----------+  | (promtool cfg) |   +-----------------------+
+|  routes.json)|  |                    +----------------+
++--------------+  |                          |
+      |           |                          v
+      |           v                    +------------------------+
+      |    +--------------------+      | Grafana dashboard JSON |
+      |    | GitHub Pages       |      | lint (jq netauto-health|
+      |    |  - index.html      |      | .json)                 |
+      |    |  - docs/report.md  |      +------------------------+
+      |    +--------------------+                 |
+      |                                           v
+      |                                   +--------------------------+
+      |                                   | Metrics API contract     |
+      |                                   | check (metrics.py        |
+      |                                   |  --snapshot, grep check) |
+      |                                   +--------------------------+
+      |
+      v
++--------------+
+|    full      |
+| (E2E lab:    |
+|  containerlab|
+|  + Ansible   |
+|  + pytest)   |
++------+-------+
+       |
+       v
++----------------+
+|  notify_full   |
+|    (Slack)     |
++----------------+
+
+```
 ### 1.1 GitHub Actions 워크플로 개요
 
-Netauto 프로젝트의 `.github/workflows` 디렉터리 구조는 다음과 같다.
+Netauto 프로젝트의 `.github/workflows` 디렉터리 구조는 다음과 같다
 
 ```text
 .github/
@@ -61,7 +123,7 @@ Netauto 프로젝트의 `.github/workflows` 디렉터리 구조는 다음과 같
     └── validate-observability.yml
 ```
 
-두 파일의 역할은 다음과 같이 분리된다.
+두 파일의 역할은 다음과 같이 분리된다
 
 - `netauto.yml`  
   - 프로젝트 전체에 대한 메인 CI/CD 파이프라인
@@ -94,7 +156,11 @@ CI / CD 전체 개요
 
 ### 2.1 Netauto GitHub Actions 전체 구조 요약
 
+### Job 파이프라인 도식
+![github action flow](https://github.com/ghogho232/netauto/blob/main/images/cicd1_githubaction.png)
+
 ```text
+
 .github/workflows/netauto.yml
 │
 ├── 트리거(on:)
@@ -164,48 +230,10 @@ on:
 6. `notify_full` : Full 결과를 Slack으로 알림
 
 
-### Job 파이프라인 도식
-```text
-                 +---------------------------+
-                 |        Triggers           |
-                 |  (push, PR, dispatch)     |
-                 +-------------+-------------+
-                               |
-                               v
-                      +--------+--------+
-                      |       light     |
-                      +--------+--------+
-                               |
-            +------------------+------------------+
-            |                                     |
-            v                                     v
-   +--------+--------+                    +-------+-------+
-   |      publish    |                    |     notify    |
-   |  (GitHub Pages) |                    |   (Slack)     |
-   +-----------------+                    +---------------+
-                               |
-                               v
-                      +----------------+
-                      |      lint      |
-                      | (promtool 등)  |
-                      +-------+--------+
-                              |
-                              v
-                      +-------+--------+
-                      |      full      |
-                      |  (E2E test)    |
-                      +-------+--------+
-                              |
-                              v
-                        +-----+--------+
-                        |  notify_full |
-                        |  (slack)     |
-                        +--------------+
-```
-
 ---
 
 ## 3. `light` Job - 기본 CI 및 리포트 생성
+![light job](https://github.com/ghogho232/netauto/blob/main/images/cicd6_light_log.png)
 
 ### 3.1 개요
 
@@ -298,7 +326,7 @@ mkdir -p tests/artifacts
 
 - 실제 장비가 없는 Light 모드에서는 `CI_LIGHT=1` 을 통해 스크립트가 안전한 모드로 동작하도록 함
 - 스크립트의 종료 코드(CODE)를 Job output으로 노출하지만 CI 자체는 **즉시 실패시키지 않음**
-  - `exit 0` 으로 마무리하여 이후 단계(테스트, 리포트 생성)를 계속 진행하게 한다.
+  - `exit 0` 으로 마무리하여 이후 단계(테스트, 리포트 생성)를 계속 진행하게 함
   - 대신 이 결과는 보고, 알림용으로 활용
 
 ### 3.3.6 DRIFT_STATUS 환경 변수 전달
@@ -328,7 +356,7 @@ mkdir -p tests/artifacts
     exit $TEST_RC
 ```
 
-## 이 단계는 Light Job에서 **가장 중요한 부분**이다.
+## 이 단계는 Light Job에서 **가장 중요한 부분**이다
 
 1. pytest로 테스트 실행 + 결과를 junit.xml에 저장
 2. collect_routes.py 실행 (실제 라우팅 상태 snapshot 수집)
@@ -358,6 +386,14 @@ mkdir -p tests/artifacts
 
 - `if: always()` 로 설정하여 테스트가 실패했더라도 산출물을 반드시 업로드
 - 이후 Job (`publish`, `notify`)에서 동일 artifact 이름으로 다운로드해 활용
+
+### 3.3.9 결과물
+### artifacts/junit.xml
+![test_junit](https://github.com/ghogho232/netauto/blob/main/images/cicd5_light_test_junit.png)
+### report.md
+![report](https://github.com/ghogho232/netauto/blob/main/images/cicd2_light_report.png)
+### python/out/route.json
+![route](https://github.com/ghogho232/netauto/blob/main/images/cicd3_light_route_json.png)
 
 ---
 
@@ -394,6 +430,13 @@ publish:
 
 이 Job으로 Netauto는 **테스트 결과를 GitHub Pages로 자동 공개**하는 CI + 자동 문서 배포 구조를 완성
 
+![publish_log](https://github.com/ghogho232/netauto/blob/main/images/cicd7_publish_log.png)
+
+![publish_report](https://github.com/ghogho232/netauto/blob/main/images/cicd8_publish_report.png)
+
+이 주소에서 확인 가능
+https://ghogho232.github.io/netauto/docs/report.md
+
 ---
 
 ## 5. `notify` Job - Slack 알림 (Light 결과)
@@ -428,8 +471,7 @@ PAGES_URL="https://${OWNER}.github.io/${REPO}/docs/report.md"
 ```
 
 - Drift 발생 여부에 따라 알림 색상을 변경
-- GitHub Pages의 최신 리포트 링크를 포함시켜,  
-  Slack에서 바로 상세 리포트로 이동 가능하게 한다.
+- GitHub Pages의 최신 리포트 링크를 포함시켜 Slack에서 바로 상세 리포트로 이동 가능하게 함
 
 Payload 예시:
 
@@ -450,6 +492,7 @@ Payload 예시:
   ]
 }
 ```
+![light_slack](https://github.com/ghogho232/netauto/blob/main/images/cicd9_light_slack.png)
 
 이 설계로 운영자는 **Slack만 보고도 현재 CI 상태를 빠르게 인지**할 수 있음
 
@@ -532,6 +575,21 @@ ansible-playbook -i inventory.ini site.yml
 - pytest는 실제 네트워크 상의 OSPF Neighbor, 라우팅, ping 결과 기반으로 성공/실패를 판정
 - FULL junit 결과는 `junit-full.xml`로 별도 보관해 Light와 구분되는 E2E 메트릭을 제공
 
+### 7.5 전체 실행 과정
+![full_log](https://github.com/ghogho232/netauto/blob/main/images/cicd10_full_log.png)
+
+
+### 7.6 결과물
+### artifacts/junit.xml
+![test_junit](https://github.com/ghogho232/netauto/blob/main/images/cicd13_full_test_junit.png)
+
+### report.md
+![report](https://github.com/ghogho232/netauto/blob/main/images/cicd11_full_report1.png)
+![report](https://github.com/ghogho232/netauto/blob/main/images/cicd11_full_report2.png)
+
+### python/out/route.json
+![route](https://github.com/ghogho232/netauto/blob/main/images/cicd12_full_route_json.png)
+
 ---
 
 ## 8. `notify_full` Job - FULL 결과 Slack 알림
@@ -552,7 +610,10 @@ Slack 메시지에는 다음 정보가 포함됨
 - Drift 상태(status)
 - report 링크 (GitHub Pages)
 
+
 이로써 운영자는 **정상적인 CI Light 결과와 실제 랩 환경에서의 FULL 결과를 각각 구분**하여 모니터링할 수 있음
+
+![full_slack](https://github.com/ghogho232/netauto/blob/main/imagescicd14_full_slack.png)
 
 ---
 
@@ -718,4 +779,3 @@ Netauto CI/CD 및 관측 전체를 하나의 그림으로 표현하면 아래와
 
 Netauto CI/CD는 네트워크 장비도 소프트웨어처럼 다루는 NetDevOps 철학을  
 실제 구현해보았으며 이후에 보다 복잡한 토폴로지, 프로토콜, 보안 정책도 이 구조 위에서 확장할 수 있을 것으로 생각한다
-
