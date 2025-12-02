@@ -613,7 +613,7 @@ Slack 메시지에는 다음 정보가 포함됨
 
 이로써 운영자는 **정상적인 CI Light 결과와 실제 랩 환경에서의 FULL 결과를 각각 구분**하여 모니터링할 수 있음
 
-![full_slack](https://github.com/ghogho232/netauto/blob/main/imagescicd14_full_slack.png)
+![full_slack](https://github.com/ghogho232/netauto/blob/main/images/cicd14_full_slack.png)
 
 ---
 
